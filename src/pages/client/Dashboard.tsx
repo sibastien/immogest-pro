@@ -9,17 +9,23 @@ import { mockAgents } from '../../data/mockAgents';
 
 export const ClientDashboard: React.FC = () => {
   const { user } = useAuthStore();
-  const { appointments } = useAgentsStore();
+  const { appointments, agents } = useAgentsStore();
 
-  const myAgent = mockAgents.find((a) => a.id === 'agent-001');
+  const todayISO = new Date().toISOString().slice(0, 10);
+
+  // The client's dedicated agent (if assigned in the store)
+  const myAgent = agents.find((a) => a.id === user?.agentId) ?? mockAgents[0];
 
   const myAppointments = appointments.filter(
     (a) => a.clientId === user?.clientId && a.status !== 'annule'
   );
 
   const upcomingAppt = myAppointments
-    .filter((a) => a.date >= '2024-12-23')
+    .filter((a) => a.date >= todayISO)
     .sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
+
+  const docsCount   = 0;
+  const visitsCount = myAppointments.filter((a) => a.date < todayISO).length;
 
   return (
     <div className="space-y-6">
@@ -27,26 +33,21 @@ export const ClientDashboard: React.FC = () => {
         <h2 className="text-xl font-semibold text-gray-900">
           Bonjour, {user?.name?.split(' ').slice(-1)[0]}
         </h2>
-        <p className="text-sm text-gray-500">Votre dossier en cours · Réf. TX-2024-060</p>
+        <p className="text-sm text-gray-500">Bienvenue dans votre espace client</p>
       </div>
 
-      {/* Status banner */}
+      {/* Welcome banner */}
       <div className="bg-primary rounded-2xl p-5 text-white">
-        <div className="text-xs font-medium opacity-80 mb-1">Statut de votre dossier</div>
-        <div className="text-lg font-semibold mb-2">Visite effectuée — En attente de retour</div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-white/50" />
-          <div className="w-2 h-2 rounded-full bg-white/50" />
-          <div className="w-2 h-2 rounded-full bg-white" />
-          <div className="w-2 h-2 rounded-full bg-white/30" />
-          <div className="w-2 h-2 rounded-full bg-white/30" />
-          <span className="text-xs opacity-70 ml-1">Étape 3/5 — Visite</span>
-        </div>
+        <div className="text-xs font-medium opacity-80 mb-1">Votre espace personnel</div>
+        <div className="text-lg font-semibold mb-1">Suivez votre projet immobilier</div>
+        <p className="text-sm opacity-80">
+          Retrouvez ici vos rendez-vous, documents et le suivi de votre dossier en temps réel.
+        </p>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <StatCard label="Documents reçus" value={2} icon={FolderOpen} color="blue" />
-        <StatCard label="Visites effectuées" value={1} icon={Building2} color="green" />
+        <StatCard label="Documents reçus" value={docsCount} icon={FolderOpen} color="blue" />
+        <StatCard label="Visites effectuées" value={visitsCount} icon={Building2} color="green" />
         <StatCard label="Prochain RDV" value={upcomingAppt.length > 0 ? upcomingAppt[0].date : '—'} icon={CalendarDays} color="purple" />
       </div>
 

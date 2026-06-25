@@ -34,7 +34,7 @@ export const CoordinatricePlanning: React.FC = () => {
   const { agents, visits } = useAgentsStore();
   const { properties }     = usePropertiesStore();
 
-  const [baseDate, setBaseDate] = useState(new Date('2024-12-23'));
+  const [baseDate, setBaseDate] = useState(new Date());
   const [filterAgent, setFilterAgent] = useState('');
 
   const weekDates = getWeekDates(baseDate);
@@ -106,7 +106,7 @@ export const CoordinatricePlanning: React.FC = () => {
         <div className="grid grid-cols-7 border-b border-gray-200">
           <div className="py-3 px-3 border-r border-gray-100" />
           {weekDates.map((d, i) => {
-            const isToday = fmt(d) === '2024-12-23';
+            const isToday = fmt(d) === fmt(new Date());
             const count = visitsInWeek.filter((v) => v.date === fmt(d)).length;
             return (
               <div key={i} className={`py-3 text-center border-r border-gray-100 last:border-r-0 ${isToday ? 'bg-primary-light' : ''}`}>

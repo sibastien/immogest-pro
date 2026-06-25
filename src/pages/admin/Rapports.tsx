@@ -10,10 +10,6 @@ import type { PropertyType } from '../../types';
 
 const MONTHS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 
-// Mock monthly revenue data (DT)
-const MONTHLY_CA = [120000, 95000, 180000, 210000, 165000, 280000, 310000, 245000, 390000, 420000, 285000, 510000];
-const MONTHLY_COM = MONTHLY_CA.map((v) => Math.round(v * 0.025));
-
 const TYPE_COLORS: Record<PropertyType, string> = {
   vente_residentielle:    '#185FA5',
   location_residentielle: '#534AB7',
@@ -34,15 +30,27 @@ export const AdminRapports: React.FC = () => {
 
   const [period, setPeriod] = useState<'6m' | '12m'>('12m');
   const months = period === '6m' ? 6 : 12;
+
+  // Monthly revenue derived from closed transactions (current year)
+  const monthlyCA = Array<number>(12).fill(0);
+  transactions
+    .filter((t) => t.stage === 'cloture')
+    .forEach((t) => {
+      const m = new Date(t.createdAt).getMonth();
+      if (m >= 0 && m < 12) monthlyCA[m] += t.amount;
+    });
+  const monthlyCom = monthlyCA.map((v) => Math.round(v * 0.025));
+
   const monthData = MONTHS.slice(12 - months);
-  const caData    = MONTHLY_CA.slice(12 - months);
-  const comData   = MONTHLY_COM.slice(12 - months);
+  const caData    = monthlyCA.slice(12 - months);
+  const comData   = monthlyCom.slice(12 - months);
 
   // Aggregated KPIs
   const totalCA       = caData.reduce((a, b) => a + b, 0);
   const totalCom      = comData.reduce((a, b) => a + b, 0);
-  const prevCA        = MONTHLY_CA.slice(0, months).reduce((a, b) => a + b, 0);
-  const caGrowth      = Math.round(((totalCA - prevCA) / prevCA) * 100);
+  const prevCA        = monthlyCA.slice(0, 12 - months).reduce((a, b) => a + b, 0);
+  const caGrowth      = prevCA > 0 ? Math.round(((totalCA - prevCA) / prevCA) * 100) : 0;
+  const hasRevenue    = totalCA > 0;
 
   const closedTx      = transactions.filter((t) => t.stage === 'cloture').length;
   const activeTx      = transactions.filter((t) => t.stage !== 'cloture').length;
@@ -129,49 +137,61 @@ export const AdminRapports: React.FC = () => {
             <BarChart3 size={18} className="text-gray-300" />
           </div>
 
-          {/* Bars */}
-          <div className="flex items-end gap-2" style={{ height: 140 }}>
-            {caData.map((ca, i) => {
-              const caH   = Math.round((ca / maxCA) * 120);
-              const comH  = Math.round((comData[i] / maxCA) * 120);
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-0.5 group">
-                  <div className="flex items-end gap-0.5 justify-center w-full">
-                    <div
-                      className="w-4 bg-primary rounded-t-sm opacity-80 group-hover:opacity-100 transition-all"
-                      style={{ height: caH }}
-                      title={`CA: ${fmt(ca)} DT`}
-                    />
-                    <div
-                      className="w-2 bg-success rounded-t-sm opacity-60 group-hover:opacity-100 transition-all"
-                      style={{ height: comH }}
-                      title={`Com: ${fmt(comData[i])} DT`}
-                    />
-                  </div>
-                  <span className="text-gray-400 text-center" style={{ fontSize: 9 }}>{monthData[i]}</span>
-                </div>
-              );
-            })}
-          </div>
+          {hasRevenue ? (
+            <>
+              {/* Bars */}
+              <div className="flex items-end gap-2" style={{ height: 140 }}>
+                {caData.map((ca, i) => {
+                  const caH   = Math.round((ca / maxCA) * 120);
+                  const comH  = Math.round((comData[i] / maxCA) * 120);
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-0.5 group">
+                      <div className="flex items-end gap-0.5 justify-center w-full">
+                        <div
+                          className="w-4 bg-primary rounded-t-sm opacity-80 group-hover:opacity-100 transition-all"
+                          style={{ height: caH }}
+                          title={`CA: ${fmt(ca)} DT`}
+                        />
+                        <div
+                          className="w-2 bg-success rounded-t-sm opacity-60 group-hover:opacity-100 transition-all"
+                          style={{ height: comH }}
+                          title={`Com: ${fmt(comData[i])} DT`}
+                        />
+                      </div>
+                      <span className="text-gray-400 text-center" style={{ fontSize: 9 }}>{monthData[i]}</span>
+                    </div>
+                  );
+                })}
+              </div>
 
-          {/* Legend */}
-          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
-            <span className="flex items-center gap-1.5 text-xs text-gray-500">
-              <span className="w-3 h-2 bg-primary rounded-sm opacity-80" /> CA ({fmtK(totalCA)} DT)
-            </span>
-            <span className="flex items-center gap-1.5 text-xs text-gray-500">
-              <span className="w-2 h-2 bg-success rounded-sm opacity-60" /> Commissions ({fmtK(totalCom)} DT)
-            </span>
-            {caGrowth > 0 ? (
-              <span className="ml-auto flex items-center gap-1 text-xs text-success font-medium">
-                <TrendingUp size={12} /> +{caGrowth}% vs période précédente
-              </span>
-            ) : (
-              <span className="ml-auto flex items-center gap-1 text-xs text-danger font-medium">
-                <TrendingDown size={12} /> {caGrowth}% vs période précédente
-              </span>
-            )}
-          </div>
+              {/* Legend */}
+              <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
+                <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <span className="w-3 h-2 bg-primary rounded-sm opacity-80" /> CA ({fmtK(totalCA)} DT)
+                </span>
+                <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <span className="w-2 h-2 bg-success rounded-sm opacity-60" /> Commissions ({fmtK(totalCom)} DT)
+                </span>
+                {caGrowth !== 0 && (
+                  caGrowth > 0 ? (
+                    <span className="ml-auto flex items-center gap-1 text-xs text-success font-medium">
+                      <TrendingUp size={12} /> +{caGrowth}% vs période précédente
+                    </span>
+                  ) : (
+                    <span className="ml-auto flex items-center gap-1 text-xs text-danger font-medium">
+                      <TrendingDown size={12} /> {caGrowth}% vs période précédente
+                    </span>
+                  )
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center text-gray-400" style={{ height: 180 }}>
+              <BarChart3 size={32} className="mb-2 opacity-30" />
+              <p className="text-sm">Aucun chiffre d'affaires enregistré</p>
+              <p className="text-xs mt-1">Les revenus s'afficheront après la première transaction clôturée</p>
+            </div>
+          )}
         </div>
 
         {/* Type breakdown */}
@@ -212,6 +232,12 @@ export const AdminRapports: React.FC = () => {
             <CalendarRange size={14} className="text-gray-300" />
           </div>
           <div className="space-y-3">
+            {agentStats.length === 0 && (
+              <div className="flex flex-col items-center justify-center text-gray-400 py-8">
+                <Award size={26} className="mb-2 opacity-30" />
+                <p className="text-sm">Aucun agent à classer</p>
+              </div>
+            )}
             {agentStats.slice(0, 5).map((a, rank) => (
               <div key={a.id} className="flex items-center gap-3">
                 <div className={[
@@ -290,7 +316,7 @@ export const AdminRapports: React.FC = () => {
               <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                 <div
                   className={`h-full ${color} rounded-full`}
-                  style={{ width: `${Math.round((count / properties.length) * 100)}%` }}
+                  style={{ width: `${properties.length > 0 ? Math.round((count / properties.length) * 100) : 0}%` }}
                 />
               </div>
             </div>

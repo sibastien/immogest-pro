@@ -19,13 +19,7 @@ type SearchResult =
   | { kind: 'client';   id: string; title: string; sub: string; path: string }
   | { kind: 'agent';    id: string; title: string; sub: string };
 
-const NOTIFS = [
-  { id: 'n1', text: 'Nouveau C.R. soumis par Rania Khelil',     time: 'Il y a 5 min',  dot: 'bg-primary', unread: true },
-  { id: 'n2', text: 'Visite confirmée — Villa Gammarth',         time: 'Il y a 18 min', dot: 'bg-success', unread: true },
-  { id: 'n3', text: 'Client Ahmed Zouari — relance recommandée', time: 'Il y a 1h',     dot: 'bg-warning', unread: true },
-  { id: 'n4', text: 'Compromis signé — App. La Marsa T4',        time: 'Il y a 2h',     dot: 'bg-purple',  unread: false },
-  { id: 'n5', text: 'Nouveau bien ajouté au portefeuille',        time: 'Hier 17:30',   dot: 'bg-gray-400', unread: false },
-];
+const NOTIFS: { id: string; text: string; time: string; dot: string; unread: boolean }[] = [];
 
 const ROLE_LABELS: Record<string, string> = {
   admin:          'Administrateur',
@@ -252,9 +246,12 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions, onMenu
                   </div>
                 </div>
               ))}
-            </div>
-            <div className="px-4 py-2.5 border-t border-gray-100 text-center">
-              <button className="text-xs text-primary hover:underline">Voir toutes les notifications</button>
+              {notifs.length === 0 && (
+                <div className="flex flex-col items-center py-10 text-gray-400">
+                  <Bell size={24} className="mb-2 opacity-25" />
+                  <p className="text-xs">Aucune notification</p>
+                </div>
+              )}
             </div>
           </div>
         )}

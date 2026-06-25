@@ -37,8 +37,8 @@ export const AdminAgenda: React.FC = () => {
   const { properties } = usePropertiesStore();
   const { clients }    = useClientsStore();
 
-  const [viewDate, setViewDate] = useState(new Date(2024, 11, 1)); // Dec 2024
-  const [selected, setSelected] = useState<string>('2024-12-23');
+  const [viewDate, setViewDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [selected, setSelected] = useState<string>(new Date().toISOString().slice(0, 10));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [newAppt, setNewAppt] = useState({ title: '', time: '10:00', type: 'visite' as Appointment['type'], agentId: '', clientId: '', notes: '' });
 
@@ -122,7 +122,7 @@ export const AdminAgenda: React.FC = () => {
                 const dateStr = fmt(year, month, day);
                 const count   = countByDate.get(dateStr) ?? 0;
                 const isSelected = dateStr === selected;
-                const isToday    = dateStr === '2024-12-23';
+                const isToday    = dateStr === new Date().toISOString().slice(0, 10);
                 const colIdx  = (firstDay + i) % 7;
                 return (
                   <div

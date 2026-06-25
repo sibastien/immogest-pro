@@ -6,14 +6,9 @@ import { Badge } from '../../components/ui/Badge';
 import { useClientsStore } from '../../store/clientsStore';
 import { useAgentsStore } from '../../store/agentsStore';
 import { useAuthStore } from '../../store/authStore';
+import { todayISO, todayLabelFr } from '../../lib/today';
 
-const TASKS = [
-  { id: 1, label: 'Rappeler Sana Trabelsi — visite La Soukra', done: false, urgent: true },
-  { id: 2, label: 'Envoyer catalogue à Youssef Dridi', done: false, urgent: false },
-  { id: 3, label: 'Créer fiche prospect appel 9h15', done: true, urgent: false },
-  { id: 4, label: 'Mettre à jour fiche M. Belhaj', done: false, urgent: false },
-  { id: 5, label: 'Confirmer RDV signature Mansouri', done: true, urgent: false },
-];
+const TASKS: { id: number; label: string; done: boolean; urgent: boolean }[] = [];
 
 export const AgentBureauDashboard: React.FC = () => {
   const { user } = useAuthStore();
@@ -27,7 +22,7 @@ export const AgentBureauDashboard: React.FC = () => {
   const toRelance = myClients.filter((c) => c.status === 'a_relancer');
 
   const todayRdv = appointments.filter(
-    (a) => a.date === '2024-12-23' && a.agentId === user?.agentId
+    (a) => a.date === todayISO() && a.agentId === user?.agentId
   );
 
   const toggleTask = (id: number) => {
@@ -40,7 +35,7 @@ export const AgentBureauDashboard: React.FC = () => {
         <h2 className="text-lg font-semibold text-gray-900">
           Bonjour, {user?.name?.split(' ')[0]} 👋
         </h2>
-        <p className="text-sm text-gray-500">Lundi 23 décembre 2024</p>
+        <p className="text-sm text-gray-500">{todayLabelFr()}</p>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
@@ -52,7 +47,7 @@ export const AgentBureauDashboard: React.FC = () => {
           color={toRelance.length > 0 ? 'amber' : 'green'}
         />
         <StatCard label="RDV aujourd'hui" value={todayRdv.length} icon={Calendar} color="purple" />
-        <StatCard label="Appels à traiter" value={4} icon={Phone} color="red" />
+        <StatCard label="Appels à traiter" value={0} icon={Phone} color="red" />
       </div>
 
       <div className="grid grid-cols-2 gap-5">
@@ -92,6 +87,9 @@ export const AgentBureauDashboard: React.FC = () => {
                 )}
               </label>
             ))}
+            {tasks.length === 0 && (
+              <p className="text-sm text-gray-400 text-center py-6">Aucune tâche pour le moment</p>
+            )}
           </div>
         </Card>
 

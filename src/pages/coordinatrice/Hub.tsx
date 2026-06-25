@@ -5,24 +5,26 @@ import { Card, CardHeader } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { StatCard } from '../../components/ui/StatCard';
 import { Users, ClipboardCheck, CalendarDays, AlertCircle } from 'lucide-react';
+import { todayISO, todayLabelFr } from '../../lib/today';
 
 export const CoordinatriceHub: React.FC = () => {
   const { agents, visits, appointments, getPendingCRs } = useAgentsStore();
 
+  const today = todayISO();
   const pendingCRs = getPendingCRs();
-  const todayVisits = visits.filter((v) => v.date === '2024-12-23' && v.status !== 'annule');
+  const todayVisits = visits.filter((v) => v.date === today && v.status !== 'annule');
   const disponibles = agents.filter((a) => a.status === 'disponible').length;
   const enVisite = agents.filter((a) => a.status === 'en_visite').length;
 
   const todayAppointments = appointments.filter(
-    (a) => a.date === '2024-12-23' && a.status !== 'annule'
+    (a) => a.date === today && a.status !== 'annule'
   );
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-gray-900">Hub Coordinatrice</h2>
-        <p className="text-sm text-gray-500">Vue temps réel · Lundi 23 décembre 2024</p>
+        <p className="text-sm text-gray-500">Vue temps réel · {todayLabelFr()}</p>
       </div>
 
       <div className="grid grid-cols-4 gap-4">

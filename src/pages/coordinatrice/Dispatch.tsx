@@ -35,7 +35,7 @@ export const CoordinatriceDispatch: React.FC = () => {
   // Today's dispatched visits
   const today = new Date().toISOString().split('T')[0];
   const todayVisits = visits
-    .filter((v) => v.date === today || v.date === '2024-12-23')
+    .filter((v) => v.date === today)
     .sort((a, b) => a.time.localeCompare(b.time));
 
   const validate = () => {

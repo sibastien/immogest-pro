@@ -6,6 +6,7 @@ import { useAgentsStore } from '../../store/agentsStore';
 import { useAuthStore } from '../../store/authStore';
 import { usePropertiesStore } from '../../store/propertiesStore';
 import { useClientsStore } from '../../store/clientsStore';
+import { todayISO, todayLabelFr } from '../../lib/today';
 
 const STATUS_LABELS = {
   planifie: 'Planifié',
@@ -31,7 +32,7 @@ export const AgentTerrainHome: React.FC = () => {
   const { clients } = useClientsStore();
 
   const myVisits = visits
-    .filter((v) => v.agentId === user?.agentId && v.date === '2024-12-23')
+    .filter((v) => v.agentId === user?.agentId && v.date === todayISO())
     .sort((a, b) => a.time.localeCompare(b.time));
 
   const done = myVisits.filter((v) => v.status === 'effectue').length;
@@ -43,7 +44,7 @@ export const AgentTerrainHome: React.FC = () => {
         <h2 className="text-base font-semibold text-gray-900">
           Bonjour, {user?.name?.split(' ')[0]} !
         </h2>
-        <p className="text-sm text-gray-400">Lundi 23 décembre 2024</p>
+        <p className="text-sm text-gray-400">{todayLabelFr()}</p>
       </div>
 
       {/* Progress */}

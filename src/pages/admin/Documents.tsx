@@ -40,16 +40,7 @@ const STATUS_CONFIG: Record<DocStatus, { label: string; variant: 'gray' | 'a_rel
   expire:               { label: 'Expiré',            variant: 'urgent' },
 };
 
-const MOCK_DOCS: Document[] = [
-  { id: 'd1', type: 'mandat_vente',    title: 'Mandat exclusif — Villa Gammarth',     propertyId: 'prop-002', clientId: 'client-003', status: 'signe',                createdAt: '2024-11-10', expiresAt: '2025-02-10', signedAt: '2024-11-15', size: '245 Ko' },
-  { id: 'd2', type: 'compromis',       title: 'Compromis — App. La Marsa T4',         propertyId: 'prop-001', clientId: 'client-001', status: 'en_attente_signature', createdAt: '2024-12-18', size: '312 Ko' },
-  { id: 'd3', type: 'mandat_location', title: 'Mandat location — Local commercial',   propertyId: 'prop-006', clientId: 'client-005', status: 'signe',                createdAt: '2024-10-05', expiresAt: '2025-01-05', signedAt: '2024-10-10', size: '198 Ko' },
-  { id: 'd4', type: 'bail',            title: 'Bail locatif — Apt. Ennasr S+2',      propertyId: 'prop-004', clientId: 'client-004', status: 'signe',                createdAt: '2024-09-01', expiresAt: '2025-09-01', signedAt: '2024-09-05', size: '410 Ko' },
-  { id: 'd5', type: 'mandat_vente',    title: 'Mandat vente — Terrain Menzah',        propertyId: 'prop-012', clientId: 'client-008', status: 'en_attente_signature', createdAt: '2024-12-20', expiresAt: '2025-03-20', size: '228 Ko' },
-  { id: 'd6', type: 'acte',            title: 'Acte authentique — Duplex La Soukra',  propertyId: 'prop-005', clientId: 'client-007', status: 'brouillon',            createdAt: '2024-12-22', size: '156 Ko' },
-  { id: 'd7', type: 'mandat_vente',    title: 'Mandat simple — Penthouse Lac',        propertyId: 'prop-010', clientId: 'client-006', status: 'expire',               createdAt: '2024-08-01', expiresAt: '2024-11-01', size: '218 Ko' },
-  { id: 'd8', type: 'autre',           title: 'Règlement copropriété — Résidence Lac', status: 'signe',       createdAt: '2024-01-01', size: '890 Ko' },
-];
+const MOCK_DOCS: Document[] = [];
 
 export const AdminDocuments: React.FC = () => {
   const { properties } = usePropertiesStore();
@@ -184,9 +175,10 @@ export const AdminDocuments: React.FC = () => {
         })}
 
         {filtered.length === 0 && (
-          <div className="flex flex-col items-center py-16 text-gray-400">
+          <div className="flex flex-col items-center py-16 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
             <FileText size={36} className="mb-3 opacity-30" />
-            <p className="text-sm">Aucun document ne correspond</p>
+            <p className="text-sm">{docs.length === 0 ? 'Aucun document pour le moment' : 'Aucun document ne correspond'}</p>
+            {docs.length === 0 && <p className="text-xs mt-1">Cliquez sur « Nouveau document » pour en ajouter un</p>}
           </div>
         )}
       </div>

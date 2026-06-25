@@ -23,16 +23,7 @@ interface Call {
   ficheCreee: boolean;
 }
 
-const MOCK_CALLS: Call[] = [
-  { id: 'c1', name: 'Mohamed Karim',  phone: '+216 98 123 456', time: '09:15', date: '2024-12-23', duration: 4,  status: 'recu',   type: 'entrant',  note: 'Cherche S+3 La Marsa, budget 450k', ficheCreee: false },
-  { id: 'c2', name: 'Inconnu',        phone: '+216 21 987 654', time: '09:52', date: '2024-12-23', duration: 0,  status: 'manque', type: 'entrant',  ficheCreee: false },
-  { id: 'c3', name: 'Leila Ben Said', phone: '+216 55 741 852', time: '10:30', date: '2024-12-23', duration: 7,  status: 'recu',   type: 'sortant',  note: 'Relance villa Gammarth — intéressée, rappel jeudi', ficheCreee: true },
-  { id: 'c4', name: 'Kamel Trabelsi', phone: '+216 22 369 147', time: '11:05', date: '2024-12-23', duration: 0,  status: 'manque', type: 'entrant',  ficheCreee: false },
-  { id: 'c5', name: 'Sonia Miled',    phone: '+216 94 258 369', time: '11:45', date: '2024-12-23', duration: 12, status: 'recu',   type: 'entrant',  note: 'Propriétaire mandat vente appartement Ennasr', ficheCreee: false },
-  { id: 'c6', name: 'Rafik Jendoubi', phone: '+216 25 147 369', time: '14:00', date: '2024-12-23', duration: 0,  status: 'rappel', type: 'entrant',  note: 'À rappeler avant 17h', ficheCreee: false },
-  { id: 'c7', name: 'Amira Chaari',   phone: '+216 97 654 321', time: '14:30', date: '2024-12-23', duration: 3,  status: 'recu',   type: 'entrant',  ficheCreee: true },
-  { id: 'c8', name: 'Omar Belhaj',    phone: '+216 50 321 654', time: '15:15', date: '2024-12-23', duration: 0,  status: 'manque', type: 'entrant',  ficheCreee: false },
-];
+const MOCK_CALLS: Call[] = [];
 
 const STATUS_CONFIG = {
   recu:   { label: 'Reçu',         Icon: PhoneIncoming, color: 'text-success', bg: 'bg-success-light' },
@@ -175,6 +166,14 @@ export const AgentBureauAppels: React.FC = () => {
             </Card>
           );
         })}
+
+        {filtered.length === 0 && (
+          <div className="flex flex-col items-center py-16 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+            <Phone size={28} className="mb-2 opacity-30" />
+            <p className="text-sm">Aucun appel enregistré</p>
+            <p className="text-xs mt-1">Les appels reçus et manqués apparaîtront ici</p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -41,7 +41,7 @@ export const CoordinatriceCarteAgents: React.FC = () => {
 
   const terrainAgents = agents.filter((a) => a.role === 'agent_terrain' || a.role === 'agent_bureau');
 
-  const today      = '2024-12-23';
+  const today      = new Date().toISOString().slice(0, 10);
   const todayVisits = visits.filter((v) => v.date === today);
 
   const selectedAgent = selected ? agents.find((a) => a.id === selected) : null;

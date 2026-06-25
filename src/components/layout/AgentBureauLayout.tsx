@@ -6,8 +6,6 @@ import {
   LayoutDashboard, Phone, UserPlus, FilePlus, BookOpen, CalendarDays,
 } from 'lucide-react';
 
-const MISSED_CALLS = 2;
-
 const PAGE_TITLES: Record<string, string> = {
   '/agent-bureau':               'Mon bureau',
   '/agent-bureau/appels':        'Journal des appels',
@@ -23,7 +21,7 @@ export const AgentBureauLayout: React.FC = () => {
 
   const navItems = [
     { label: 'Mon bureau',      path: '/agent-bureau',               icon: LayoutDashboard },
-    { label: 'Appels',          path: '/agent-bureau/appels',        icon: Phone, badge: MISSED_CALLS || undefined },
+    { label: 'Appels',          path: '/agent-bureau/appels',        icon: Phone },
     { label: 'Prospects',       path: '/agent-bureau/prospects',     icon: UserPlus },
     { label: 'Nouvelle fiche',  path: '/agent-bureau/nouvelle-fiche',icon: FilePlus },
     { label: 'Catalogue',       path: '/agent-bureau/catalogue',     icon: BookOpen },

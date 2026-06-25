@@ -27,7 +27,7 @@ export const ClientRendezVous: React.FC = () => {
     return v.status !== 'annule';
   }).slice(0, 4);
 
-  const today = '2024-12-23';
+  const today = new Date().toISOString().slice(0, 10);
 
   const upcoming = clientVisits.filter((v) => v.date >= today);
   const past     = clientVisits.filter((v) => v.date < today);

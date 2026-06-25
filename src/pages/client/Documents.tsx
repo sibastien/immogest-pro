@@ -17,13 +17,7 @@ interface ClientDoc {
   locked: boolean;
 }
 
-const MOCK_DOCS: ClientDoc[] = [
-  { id: 'd1', title: 'Compromis de vente — App. La Marsa',  type: 'Compromis',          status: 'signe',       date: '2024-12-10', size: '312 Ko', icon: '🤝', locked: false },
-  { id: 'd2', title: 'Mandat de recherche acheteur',         type: 'Mandat',             status: 'signe',       date: '2024-11-15', size: '198 Ko', icon: '📋', locked: false },
-  { id: 'd3', title: 'Acte authentique de vente',            type: 'Acte notarié',       status: 'en_attente',  date: '2024-12-22', size: '—',      icon: '⚖️', locked: true },
-  { id: 'd4', title: 'Rapport d\'expertise immobilière',     type: 'Expertise',          status: 'disponible',  date: '2024-12-05', size: '890 Ko', icon: '📊', locked: false },
-  { id: 'd5', title: 'Règlement de copropriété',             type: 'Document légal',     status: 'disponible',  date: '2024-11-28', size: '1.2 Mo', icon: '📄', locked: false },
-];
+const MOCK_DOCS: ClientDoc[] = [];
 
 const STATUS_CONFIG: Record<DocStatus, { label: string; color: string; bg: string; Icon: React.FC<{ size?: number; className?: string }> }> = {
   disponible:  { label: 'Disponible',   color: 'text-success', bg: 'bg-success-light', Icon: CheckCircle2 },
@@ -131,6 +125,14 @@ export const ClientDocuments: React.FC = () => {
             </div>
           );
         })}
+
+        {filtered.length === 0 && (
+          <div className="flex flex-col items-center py-14 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+            <FileText size={32} className="mb-2 opacity-30" />
+            <p className="text-sm">Aucun document disponible</p>
+            <p className="text-xs mt-1">Vos mandats et compromis apparaîtront ici</p>
+          </div>
+        )}
       </div>
 
       {/* Note */}
