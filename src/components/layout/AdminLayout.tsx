@@ -29,6 +29,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/documents':    'Documents',
   '/admin/rapports':     'Rapports & statistiques',
   '/admin/equipe':       'Équipe',
+  '/admin/parametres':   'Paramètres',
 };
 
 export const AdminLayout: React.FC = () => {

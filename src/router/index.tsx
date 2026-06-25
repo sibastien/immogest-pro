@@ -24,6 +24,7 @@ import { AdminTransactions } from '../pages/admin/Transactions';
 import { AdminAgenda } from '../pages/admin/Agenda';
 import { AdminDocuments } from '../pages/admin/Documents';
 import { AdminRapports } from '../pages/admin/Rapports';
+import { AdminSettings } from '../pages/admin/Settings';
 
 // Coordinatrice
 import { CoordinatriceHub } from '../pages/coordinatrice/Hub';
@@ -102,6 +103,7 @@ export const router = createBrowserRouter([
           { path: 'equipe', element: <AdminTeam /> },
           { path: 'documents', element: <AdminDocuments /> },
           { path: 'rapports', element: <AdminRapports /> },
+          { path: 'parametres', element: <AdminSettings /> },
         ],
       },
     ],

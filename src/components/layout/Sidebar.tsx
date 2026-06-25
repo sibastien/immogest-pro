@@ -101,10 +101,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Footer */}
       <div className="px-3 py-3 border-t border-gray-100 space-y-0.5">
-        <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors">
-          <Settings size={18} />
-          <span>Paramètres</span>
-        </button>
+        {user?.role === 'admin' && (
+          <button
+            onClick={() => { navigate('/admin/parametres'); onMobileClose?.(); }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            <Settings size={18} />
+            <span>Paramètres</span>
+          </button>
+        )}
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-danger-light hover:text-danger transition-colors"

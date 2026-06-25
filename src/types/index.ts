@@ -59,6 +59,7 @@ export interface Agent {
   status: 'disponible' | 'en_visite' | 'bureau' | 'hors_ligne';
   location?: string;
   avatar?: string;
+  accessCode?: string;
   stats: {
     activeProperties: number;
     visitsThisMonth: number;

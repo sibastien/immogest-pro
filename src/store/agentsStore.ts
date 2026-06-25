@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { Agent, Visit, Transaction, CompteRendu, Appointment } from '../types';
 import { mockAgents } from '../data/mockAgents';
 import { mockVisits, mockTransactions, mockComptesRendus, mockAppointments } from '../data/mockTransactions';
@@ -9,6 +10,8 @@ interface AgentsState {
   transactions: Transaction[];
   comptesRendus: CompteRendu[];
   appointments: Appointment[];
+  addAgent: (agent: Agent) => void;
+  removeAgent: (id: string) => void;
   updateAgentStatus: (id: string, status: Agent['status']) => void;
   getAgentById: (id: string) => Agent | undefined;
   getVisitsByAgent: (agentId: string) => Visit[];
@@ -21,12 +24,20 @@ interface AgentsState {
   addTransaction: (tx: Transaction) => void;
 }
 
-export const useAgentsStore = create<AgentsState>((set, get) => ({
+export const useAgentsStore = create<AgentsState>()(
+  persist(
+    (set, get) => ({
   agents: mockAgents,
   visits: mockVisits,
   transactions: mockTransactions,
   comptesRendus: mockComptesRendus,
   appointments: mockAppointments,
+
+  addAgent: (agent) =>
+    set((state) => ({ agents: [...state.agents, agent] })),
+
+  removeAgent: (id) =>
+    set((state) => ({ agents: state.agents.filter((a) => a.id !== id) })),
 
   updateAgentStatus: (id, status) =>
     set((state) => ({
@@ -78,4 +89,12 @@ export const useAgentsStore = create<AgentsState>((set, get) => ({
 
   addTransaction: (tx) =>
     set((state) => ({ transactions: [tx, ...state.transactions] })),
-}));
+    }),
+    {
+      name: 'immogest-agents',
+      // Only persist the managed agents list; mock visits/transactions
+      // stay sourced from their seed data on each load.
+      partialize: (state) => ({ agents: state.agents }),
+    }
+  )
+);

@@ -102,7 +102,7 @@ export const Login: React.FC = () => {
     setLoading(false);
 
     if (result.success) {
-      const role = ROLE_OPTIONS.find((r) => r.email === email)?.role;
+      const role = useAuthStore.getState().user?.role;
       if (role) navigate(dashboardPathByRole[role]);
     } else {
       setError(result.error ?? 'Erreur de connexion');
