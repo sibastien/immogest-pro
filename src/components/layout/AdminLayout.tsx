@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
@@ -33,16 +33,27 @@ const PAGE_TITLES: Record<string, string> = {
 
 export const AdminLayout: React.FC = () => {
   const { pathname } = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   const baseTitle = Object.entries(PAGE_TITLES).find(([path]) =>
     pathname === path || pathname.startsWith(path + '/')
   )?.[1] ?? 'ImmoGest Pro';
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
-      <Sidebar navItems={NAV_ITEMS} accentColor="blue" logoSubtitle="Administration" />
+      <Sidebar
+        navItems={NAV_ITEMS}
+        accentColor="blue"
+        logoSubtitle="Administration"
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Topbar title={baseTitle} />
-        <main className="flex-1 overflow-y-auto p-6">
+        <Topbar
+          title={baseTitle}
+          onMenuToggle={() => setMobileOpen(true)}
+        />
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <Outlet />
         </main>
       </div>

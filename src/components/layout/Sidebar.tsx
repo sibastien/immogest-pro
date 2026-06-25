@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { Avatar } from '../ui/Avatar';
@@ -16,6 +16,8 @@ interface SidebarProps {
   navItems: NavItem[];
   accentColor?: 'blue' | 'purple';
   logoSubtitle?: string;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 const ACCENT = {
@@ -37,6 +39,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   navItems,
   accentColor = 'blue',
   logoSubtitle = 'Gestion immobilière',
+  mobileOpen = false,
+  onMobileClose,
 }) => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
@@ -47,10 +51,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     navigate('/login');
   };
 
-  return (
-    <aside className="w-60 h-screen bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+  const panel = (
+    <aside className="w-60 h-full bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-gray-100">
+      <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className={`w-8 h-8 rounded-lg ${colors.dot} flex items-center justify-center`}>
             <span className="text-white text-sm font-bold">IG</span>
@@ -60,6 +64,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="text-xs text-gray-400">{logoSubtitle}</div>
           </div>
         </div>
+        {onMobileClose && (
+          <button
+            onClick={onMobileClose}
+            className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400"
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -68,6 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <NavLink
             key={item.path}
             to={item.path}
+            onClick={onMobileClose}
             className={({ isActive }) =>
               [
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
@@ -110,5 +123,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop: static sidebar */}
+      <div className="hidden md:flex h-screen">
+        {panel}
+      </div>
+
+      {/* Mobile: overlay drawer */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={onMobileClose}
+          />
+          <div className="relative z-10 h-full">
+            {panel}
+          </div>
+        </div>
+      )}
+    </>
   );
 };

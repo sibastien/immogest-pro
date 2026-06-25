@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Bell, Search, X, Building2, Users, User, ArrowRight, LogOut, ChevronDown, Shield } from 'lucide-react';
+import { Bell, Search, X, Building2, Users, User, ArrowRight, LogOut, ChevronDown, Shield, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { usePropertiesStore } from '../../store/propertiesStore';
@@ -11,6 +11,7 @@ interface TopbarProps {
   title: string;
   subtitle?: string;
   actions?: React.ReactNode;
+  onMenuToggle?: () => void;
 }
 
 type SearchResult =
@@ -34,7 +35,7 @@ const ROLE_LABELS: Record<string, string> = {
   client:         'Client',
 };
 
-export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions }) => {
+export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions, onMenuToggle }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { properties } = usePropertiesStore();
@@ -120,7 +121,17 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions }) => {
   const KIND_LABEL = { property: 'Bien', client: 'Client', agent: 'Agent' };
 
   return (
-    <header className="h-14 bg-white border-b border-gray-200 flex items-center px-6 gap-4 flex-shrink-0 relative z-40">
+    <header className="h-14 bg-white border-b border-gray-200 flex items-center px-4 md:px-6 gap-3 md:gap-4 flex-shrink-0 relative z-40">
+      {/* Hamburger — mobile only */}
+      {onMenuToggle && (
+        <button
+          onClick={onMenuToggle}
+          className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500 flex-shrink-0"
+        >
+          <Menu size={20} />
+        </button>
+      )}
+
       {/* Title */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
@@ -140,15 +151,15 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions }) => {
       <div ref={searchRef} className="relative">
         <button
           onClick={() => { setSearchOpen(true); setTimeout(() => inputRef.current?.focus(), 50); }}
-          className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-400 hover:border-primary/40 hover:bg-primary-light transition-colors min-w-[180px]"
+          className="flex items-center gap-2 px-2 md:px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-400 hover:border-primary/40 hover:bg-primary-light transition-colors md:min-w-[180px]"
         >
           <Search size={14} />
-          <span className="flex-1 text-left">Rechercher…</span>
-          <kbd className="text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-mono">⌘K</kbd>
+          <span className="hidden md:inline flex-1 text-left">Rechercher…</span>
+          <kbd className="hidden md:inline text-xs bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-mono">⌘K</kbd>
         </button>
 
         {searchOpen && (
-          <div className="absolute top-full right-0 mt-1 w-[480px] bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden">
+          <div className="absolute top-full right-0 mt-1 w-[calc(100vw-2rem)] sm:w-[480px] bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden">
             <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100">
               <Search size={15} className="text-gray-400 flex-shrink-0" />
               <input

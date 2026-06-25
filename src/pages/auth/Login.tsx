@@ -80,7 +80,7 @@ export const Login: React.FC = () => {
 
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('demo');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -112,9 +112,9 @@ export const Login: React.FC = () => {
   const selectedOption = ROLE_OPTIONS.find((r) => r.role === selectedRole);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-light flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-light flex flex-col items-center justify-center p-4 py-8">
       {/* Logo */}
-      <div className="mb-8 text-center">
+      <div className="mb-6 text-center">
         <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
           <span className="text-white text-2xl font-bold">IG</span>
         </div>
@@ -124,9 +124,9 @@ export const Login: React.FC = () => {
 
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
         {/* Role selection */}
-        <div className="p-6 border-b border-gray-100">
+        <div className="p-4 sm:p-6 border-b border-gray-100">
           <p className="text-sm font-medium text-gray-700 mb-4">Sélectionnez votre profil</p>
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
             {ROLE_OPTIONS.map((option) => {
               const Icon = option.icon;
               const isSelected = selectedRole === option.role;
@@ -173,7 +173,7 @@ export const Login: React.FC = () => {
         </div>
 
         {/* Login form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} autoComplete="off" className="p-4 sm:p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
             <input
@@ -182,6 +182,7 @@ export const Login: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="votre@email.tn"
               required
+              autoComplete="off"
               className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
             />
           </div>
@@ -197,6 +198,7 @@ export const Login: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                autoComplete="new-password"
                 className="w-full px-3 py-2.5 pr-10 border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
               />
               <button
@@ -242,8 +244,8 @@ export const Login: React.FC = () => {
                 }}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors text-left"
               >
-                <span className="text-xs font-mono text-gray-500 w-52">{opt.email}</span>
-                <span className="text-xs text-gray-400">— {opt.label}</span>
+                <span className="text-xs font-mono text-gray-500 w-36 sm:w-52 truncate">{opt.email}</span>
+                <span className="text-xs text-gray-400 hidden sm:inline">— {opt.label}</span>
               </button>
             ))}
           </div>
@@ -251,7 +253,7 @@ export const Login: React.FC = () => {
       </div>
 
       <p className="text-xs text-gray-400 mt-6">
-        ImmoGest Pro v1.0 · Mot de passe démo : <span className="font-mono">demo</span>
+        ImmoGest Pro v1.0
       </p>
     </div>
   );
