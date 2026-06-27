@@ -3,20 +3,25 @@ import { persist } from 'zustand/middleware';
 import type { User, Role } from '../types';
 import { useAgentsStore } from './agentsStore';
 
-const DEMO_USERS: User[] = [
-  { id: 'u-admin', name: 'Ahmed Directeur', initials: 'AD', role: 'admin', email: 'admin@immogest.tn' },
-  { id: 'u-coord', name: 'Fatma Zouari', initials: 'FZ', role: 'coordinatrice', agentId: 'agent-004', email: 'coordinatrice@immogest.tn' },
-  { id: 'u-bureau', name: 'Slim Ben Amor', initials: 'SB', role: 'agent_bureau', agentId: 'agent-001', email: 'bureau@immogest.tn' },
-  { id: 'u-terrain', name: 'Rania Khelil', initials: 'RK', role: 'agent_terrain', agentId: 'agent-002', email: 'terrain@immogest.tn' },
-  { id: 'u-client', name: 'Mohamed Karim Belhaj', initials: 'MK', role: 'client', clientId: 'client-001', email: 'client@immogest.tn' },
-];
+// Single administrator account. Credentials are randomly generated — there are
+// no public "demo" logins. The admin manages every other login (agents,
+// coordinatrice, clients) from the Settings page via access codes.
+const ADMIN_EMAIL = 'admin.vwxkwa@beeimob.tn';
+const ADMIN_PASSWORD = 'A9KLk5zmfH&%Th';
+
+const ADMIN_USER: User = {
+  id: 'u-admin',
+  name: 'Administrateur',
+  initials: 'AD',
+  role: 'admin',
+  email: ADMIN_EMAIL,
+};
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
-  switchRole: (role: Role) => void;
 }
 
 export const dashboardPathByRole: Record<Role, string> = {
@@ -36,22 +41,26 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         const normalizedEmail = email.trim().toLowerCase();
 
-        // 1) Demo accounts: password "demo"
-        const demo = DEMO_USERS.find((u) => u.email.toLowerCase() === normalizedEmail);
-        if (demo) {
-          if (password !== 'demo') {
-            return { success: false, error: 'Mot de passe incorrect. Utilisez "demo" pour la démo.' };
+        // 1) Administrator account
+        if (normalizedEmail === ADMIN_EMAIL.toLowerCase()) {
+          if (password !== ADMIN_PASSWORD) {
+            return { success: false, error: 'Identifiants administrateur incorrects.' };
           }
-          set({ user: demo, isAuthenticated: true });
+          set({ user: ADMIN_USER, isAuthenticated: true });
           return { success: true };
         }
 
-        // 2) Agents added by the admin: log in with their access code
+        // 2) Agents added by the admin: log in with their access code.
+        //    The access code is stored uppercase, so compare case-insensitively
+        //    to accept it whatever the casing the user types.
         const agent = useAgentsStore
           .getState()
           .agents.find((a) => a.email.toLowerCase() === normalizedEmail);
         if (agent) {
-          if (!agent.accessCode || password !== agent.accessCode) {
+          if (
+            !agent.accessCode ||
+            password.trim().toUpperCase() !== agent.accessCode.toUpperCase()
+          ) {
             return { success: false, error: "Code d'accès incorrect." };
           }
           const user: User = {
@@ -71,11 +80,6 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         set({ user: null, isAuthenticated: false });
-      },
-
-      switchRole: (role: Role) => {
-        const found = DEMO_USERS.find((u) => u.role === role);
-        if (found) set({ user: found, isAuthenticated: true });
       },
     }),
     {
