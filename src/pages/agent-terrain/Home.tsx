@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, Clock, CheckCircle2, ChevronRight } from 'lucide-react';
+import { MapPin, Clock, CheckCircle2, ChevronRight, CalendarPlus, Phone, UserPlus } from 'lucide-react';
 import { Badge } from '../../components/ui/Badge';
 import { useAgentsStore } from '../../store/agentsStore';
 import { useAuthStore } from '../../store/authStore';
@@ -62,6 +62,24 @@ export const AgentTerrainHome: React.FC = () => {
         <p className="text-xs opacity-70 mt-2">
           {myVisits.length - done} visite{myVisits.length - done !== 1 ? 's' : ''} restante{myVisits.length - done !== 1 ? 's' : ''}
         </p>
+      </div>
+
+      {/* Quick actions */}
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { label: 'Planifier', icon: CalendarPlus, path: '/agent-terrain/planifier' },
+          { label: 'Appel', icon: Phone, path: '/agent-terrain/appels' },
+          { label: 'Fiche', icon: UserPlus, path: '/agent-terrain/nouvelle-fiche' },
+        ].map(({ label, icon: Icon, path }) => (
+          <button
+            key={label}
+            onClick={() => navigate(path)}
+            className="flex flex-col items-center gap-1.5 py-3 bg-white border border-gray-200 rounded-xl active:bg-gray-50 transition-colors"
+          >
+            <Icon size={18} className="text-primary" />
+            <span className="text-xs font-medium text-gray-700">{label}</span>
+          </button>
+        ))}
       </div>
 
       {/* Visit list */}

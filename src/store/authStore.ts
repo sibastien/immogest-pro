@@ -1,27 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User, Role } from '../types';
-import { useAgentsStore } from './agentsStore';
-
-// Single administrator account. Credentials are randomly generated — there are
-// no public "demo" logins. The admin manages every other login (agents,
-// coordinatrice, clients) from the Settings page via access codes.
-const ADMIN_EMAIL = 'admin.vwxkwa@beeimob.tn';
-const ADMIN_PASSWORD = 'A9KLk5zmfH&%Th';
-
-const ADMIN_USER: User = {
-  id: 'u-admin',
-  name: 'Administrateur',
-  initials: 'AD',
-  role: 'admin',
-  email: ADMIN_EMAIL,
-};
+import { api, ApiError } from '../lib/api';
+import { getToken, setToken, clearToken } from '../lib/token';
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  loadMe: () => Promise<void>;
 }
 
 export const dashboardPathByRole: Record<Role, string> = {
@@ -39,47 +27,38 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
 
       login: async (email: string, password: string) => {
-        const normalizedEmail = email.trim().toLowerCase();
-
-        // 1) Administrator account
-        if (normalizedEmail === ADMIN_EMAIL.toLowerCase()) {
-          if (password !== ADMIN_PASSWORD) {
-            return { success: false, error: 'Identifiants administrateur incorrects.' };
-          }
-          set({ user: ADMIN_USER, isAuthenticated: true });
-          return { success: true };
-        }
-
-        // 2) Agents added by the admin: log in with their access code.
-        //    The access code is stored uppercase, so compare case-insensitively
-        //    to accept it whatever the casing the user types.
-        const agent = useAgentsStore
-          .getState()
-          .agents.find((a) => a.email.toLowerCase() === normalizedEmail);
-        if (agent) {
-          if (
-            !agent.accessCode ||
-            password.trim().toUpperCase() !== agent.accessCode.toUpperCase()
-          ) {
-            return { success: false, error: "Code d'accès incorrect." };
-          }
-          const user: User = {
-            id: `u-${agent.id}`,
-            name: agent.name,
-            initials: agent.initials,
-            role: agent.role,
-            email: agent.email,
-            ...(agent.role === 'client' ? { clientId: agent.id } : { agentId: agent.id }),
-          };
+        try {
+          const { token, user } = await api.post<{ token: string; user: User }>('/auth/login', {
+            email: email.trim().toLowerCase(),
+            password,
+          });
+          setToken(token);
           set({ user, isAuthenticated: true });
           return { success: true };
+        } catch (e) {
+          const msg = e instanceof ApiError ? e.message : 'Connexion impossible. Réessayez.';
+          return { success: false, error: msg };
         }
-
-        return { success: false, error: 'Compte non trouvé pour cet email.' };
       },
 
       logout: () => {
+        clearToken();
         set({ user: null, isAuthenticated: false });
+      },
+
+      // Validate the stored token on app start; refresh the user or sign out.
+      loadMe: async () => {
+        if (!getToken()) {
+          set({ user: null, isAuthenticated: false });
+          return;
+        }
+        try {
+          const { user } = await api.get<{ user: User }>('/auth/me');
+          set({ user, isAuthenticated: true });
+        } catch {
+          clearToken();
+          set({ user: null, isAuthenticated: false });
+        }
       },
     }),
     {

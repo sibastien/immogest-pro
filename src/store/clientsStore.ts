@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Client } from '../types';
-import { mockClients } from '../data/mockClients';
+import { api } from '../lib/api';
 
 interface ClientFilters {
   type?: Client['type'];
@@ -11,8 +11,10 @@ interface ClientFilters {
 
 interface ClientsState {
   clients: Client[];
+  loaded: boolean;
   filters: ClientFilters;
   selectedClient: Client | null;
+  load: () => Promise<void>;
   setFilters: (filters: Partial<ClientFilters>) => void;
   resetFilters: () => void;
   selectClient: (id: string | null) => void;
@@ -23,9 +25,19 @@ interface ClientsState {
 }
 
 export const useClientsStore = create<ClientsState>((set, get) => ({
-  clients: mockClients,
+  clients: [],
+  loaded: false,
   filters: {},
   selectedClient: null,
+
+  load: async () => {
+    try {
+      const clients = await api.get<Client[]>('/clients');
+      set({ clients, loaded: true });
+    } catch {
+      set({ loaded: true });
+    }
+  },
 
   setFilters: (filters) =>
     set((state) => ({ filters: { ...state.filters, ...filters } })),
@@ -37,13 +49,22 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
     set({ selectedClient: client });
   },
 
-  addClient: (client) =>
-    set((state) => ({ clients: [client, ...state.clients] })),
+  // Optimistic: update the cache immediately, then persist to the API.
+  addClient: (client) => {
+    set((state) => ({ clients: [client, ...state.clients] }));
+    api.post<Client>('/clients', client)
+      .then((saved) => set((state) => ({
+        clients: state.clients.map((c) => (c.id === client.id ? saved : c)),
+      })))
+      .catch(() => get().load());
+  },
 
-  updateClient: (id, updates) =>
+  updateClient: (id, updates) => {
     set((state) => ({
       clients: state.clients.map((c) => (c.id === id ? { ...c, ...updates } : c)),
-    })),
+    }));
+    api.put<Client>(`/clients/${id}`, updates).catch(() => get().load());
+  },
 
   getFilteredClients: () => {
     const { clients, filters } = get();

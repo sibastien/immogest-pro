@@ -4,13 +4,14 @@ import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import {
   LayoutDashboard, Building2, Users, ArrowLeftRight,
-  Calendar, GitPullRequest, UserCheck, FileText, BarChart3,
+  Calendar, GitPullRequest, UserCheck, FileText, BarChart3, Phone,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { label: 'Tableau de bord', path: '/admin',              icon: LayoutDashboard },
   { label: 'Biens',           path: '/admin/biens',        icon: Building2 },
   { label: 'Clients',         path: '/admin/clients',      icon: Users },
+  { label: 'Appels',          path: '/admin/appels',       icon: Phone },
   { label: 'Transactions',    path: '/admin/transactions', icon: ArrowLeftRight },
   { label: 'Pipeline',        path: '/admin/pipeline',     icon: GitPullRequest },
   { label: 'Agenda',          path: '/admin/agenda',       icon: Calendar },
@@ -23,6 +24,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin':              'Tableau de bord',
   '/admin/biens':        'Biens immobiliers',
   '/admin/clients':      'Clients',
+  '/admin/appels':       'Appels des agents',
   '/admin/transactions': 'Transactions',
   '/admin/pipeline':     'Pipeline commercial',
   '/admin/agenda':       'Agenda',

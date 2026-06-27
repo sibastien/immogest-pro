@@ -38,11 +38,12 @@ type FormData = Omit<Client, 'id' | 'createdAt'>;
 
 interface ClientFormProps {
   client?: Client;
+  defaultAgentId?: string;
   onSuccess: (id: string) => void;
   onCancel: () => void;
 }
 
-export const ClientForm: React.FC<ClientFormProps> = ({ client, onSuccess, onCancel }) => {
+export const ClientForm: React.FC<ClientFormProps> = ({ client, defaultAgentId, onSuccess, onCancel }) => {
   const isEdit = !!client;
   const { addClient, updateClient } = useClientsStore();
   const { agents } = useAgentsStore();
@@ -56,7 +57,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({ client, onSuccess, onCan
     type:        client?.type        ?? 'acheteur',
     status:      client?.status      ?? 'actif',
     source:      client?.source      ?? 'appel',
-    agentId:     client?.agentId     ?? (fieldAgents[0]?.id ?? ''),
+    agentId:     client?.agentId     ?? defaultAgentId ?? (fieldAgents[0]?.id ?? ''),
     lastContact: client?.lastContact ?? new Date().toISOString().split('T')[0],
     budget:      client?.budget,
     search:      client?.search      ?? '',

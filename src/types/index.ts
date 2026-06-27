@@ -94,6 +94,19 @@ export interface CompteRendu {
   status: 'brouillon' | 'soumis' | 'valide' | 'correction_demandee';
 }
 
+export interface Call {
+  id: string;
+  agentId: string;
+  clientId?: string;
+  clientName: string;
+  phone?: string;
+  type: 'entrant' | 'sortant';
+  outcome: 'joint' | 'non_repondu' | 'rappel';
+  notes: string;
+  date: string;
+  time: string;
+}
+
 export interface Transaction {
   id: string;
   ref: string;

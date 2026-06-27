@@ -1,6 +1,9 @@
 import React from 'react';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore, dashboardPathByRole } from '../store/authStore';
+import { useClientsStore } from '../store/clientsStore';
+import { useAgentsStore } from '../store/agentsStore';
+import { useCallsStore } from '../store/callsStore';
 
 // Layouts
 import { AdminLayout } from '../components/layout/AdminLayout';
@@ -24,6 +27,7 @@ import { AdminTransactions } from '../pages/admin/Transactions';
 import { AdminAgenda } from '../pages/admin/Agenda';
 import { AdminDocuments } from '../pages/admin/Documents';
 import { AdminRapports } from '../pages/admin/Rapports';
+import { AdminAppels } from '../pages/admin/Appels';
 import { AdminSettings } from '../pages/admin/Settings';
 
 // Coordinatrice
@@ -46,15 +50,34 @@ import { AgentTerrainHome } from '../pages/agent-terrain/Home';
 import { VisiteDetail } from '../pages/agent-terrain/VisiteDetail';
 import { CompteRenduForm } from '../pages/agent-terrain/CompteRenduForm';
 import { AgentTerrainPerformance } from '../pages/agent-terrain/Performance';
+import { AgentTerrainClients } from '../pages/agent-terrain/MesClients';
+import { AgentTerrainNouvelleFiche } from '../pages/agent-terrain/NouvelleFiche';
+import { AgentTerrainAppels } from '../pages/agent-terrain/Appels';
+import { AgentTerrainPlanifierVisite } from '../pages/agent-terrain/PlanifierVisite';
 
 // Client
 import { ClientDashboard } from '../pages/client/Dashboard';
 import { ClientDocuments } from '../pages/client/Documents';
 import { ClientRendezVous } from '../pages/client/RendezVous';
 
+// Loads the shared API data once the user is authenticated. Each loader is
+// role-scoped server-side, so calling them all is safe for every role.
+function useBootstrapData(isAuthenticated: boolean) {
+  React.useEffect(() => {
+    if (!isAuthenticated) return;
+    useClientsStore.getState().load();
+    useCallsStore.getState().load();
+    const agents = useAgentsStore.getState();
+    agents.loadAgents();
+    agents.loadVisits();
+    agents.loadComptesRendus();
+  }, [isAuthenticated]);
+}
+
 // Route guard
 const RequireAuth: React.FC<{ allowedRoles?: string[] }> = ({ allowedRoles }) => {
   const { isAuthenticated, user } = useAuthStore();
+  useBootstrapData(isAuthenticated);
 
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
@@ -97,6 +120,7 @@ export const router = createBrowserRouter([
           { path: 'biens/:id', element: <PropertyDetail /> },
           { path: 'clients', element: <AdminClients /> },
           { path: 'clients/:id', element: <ClientDetail /> },
+          { path: 'appels', element: <AdminAppels /> },
           { path: 'transactions', element: <AdminTransactions /> },
           { path: 'agenda', element: <AdminAgenda /> },
           { path: 'pipeline', element: <AdminPipeline /> },
@@ -159,6 +183,10 @@ export const router = createBrowserRouter([
           { path: 'visites', element: <AgentTerrainHome /> },
           { path: 'visites/:id', element: <VisiteDetail /> },
           { path: 'compte-rendu/:visitId', element: <CompteRenduForm /> },
+          { path: 'planifier', element: <AgentTerrainPlanifierVisite /> },
+          { path: 'appels', element: <AgentTerrainAppels /> },
+          { path: 'clients', element: <AgentTerrainClients /> },
+          { path: 'nouvelle-fiche', element: <AgentTerrainNouvelleFiche /> },
           { path: 'performance', element: <AgentTerrainPerformance /> },
         ],
       },
