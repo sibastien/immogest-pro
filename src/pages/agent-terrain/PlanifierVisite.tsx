@@ -16,7 +16,7 @@ export const AgentTerrainPlanifierVisite: React.FC = () => {
   const { clients } = useClientsStore();
   const { properties } = usePropertiesStore();
 
-  const myClients = clients.filter((c) => c.agentId === user?.agentId);
+  const myClients = clients; // shared contact directory
 
   const [clientId, setClientId] = useState(params.get('client') ?? '');
   const [propertyId, setPropertyId] = useState('');

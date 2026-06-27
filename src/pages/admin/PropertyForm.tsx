@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, ImagePlus } from 'lucide-react';
 import { usePropertiesStore } from '../../store/propertiesStore';
 import { useAgentsStore } from '../../store/agentsStore';
 import { useAuthStore } from '../../store/authStore';
+import { api } from '../../lib/api';
 import type { Property, PropertyType, PropertyStatus } from '../../types';
 
 const TYPE_OPTIONS: { value: PropertyType; label: string }[] = [
@@ -30,7 +31,7 @@ const COMMON_FEATURES = [
   'Vue mer', 'Neuf', 'Viabilisé', 'WiFi',
 ];
 
-type FormData = Omit<Property, 'id' | 'photos'> & { featureInput: string };
+type FormData = Omit<Property, 'id'> & { featureInput: string };
 
 function generateRef(type: PropertyType): string {
   const prefix = { vente_residentielle: 'V', location_residentielle: 'L', commercial: 'C', terrain: 'T' }[type];
@@ -73,6 +74,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
     agentId:     property?.agentId     ?? user?.agentId ?? (terrainAgents[0]?.id ?? ''),
     description: property?.description ?? '',
     features:    property?.features    ?? [],
+    photos:      property?.photos      ?? [],
     floor:       property?.floor,
     totalFloors: property?.totalFloors,
     parking:     property?.parking     ?? false,
@@ -112,6 +114,26 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
     }
   };
 
+  const [uploading, setUploading] = useState(false);
+
+  const handlePhotos = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      Array.from(files).forEach((f) => fd.append('files', f));
+      const uploaded = await api.upload<{ url: string }[]>('/uploads', fd);
+      setForm((f) => ({ ...f, photos: [...(f.photos ?? []), ...uploaded.map((u) => u.url)] }));
+    } catch {
+      // surfaced by the disabled state; keep it simple
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removePhoto = (url: string) =>
+    setForm((f) => ({ ...f, photos: (f.photos ?? []).filter((p) => p !== url) }));
+
   const validate = (): boolean => {
     const e: Partial<Record<keyof FormData, string>> = {};
     if (!form.title.trim())    e.title    = 'Le titre est obligatoire';
@@ -136,7 +158,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
       onSuccess(property.id);
     } else {
       const newId = `prop-${Date.now()}`;
-      addProperty({ id: newId, photos: [], ...rest, ref });
+      addProperty({ id: newId, ...rest, ref });
       onSuccess(newId);
     }
   };
@@ -404,6 +426,37 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
             ))}
           </div>
         )}
+      </fieldset>
+
+      {/* Photos */}
+      <fieldset className="space-y-3">
+        <legend className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Photos</legend>
+        <div className="flex flex-wrap gap-2">
+          {(form.photos ?? []).map((url) => (
+            <div key={url} className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 group">
+              <img src={url} alt="" className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removePhoto(url)}
+                className="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-danger"
+              >
+                <X size={11} />
+              </button>
+            </div>
+          ))}
+          <label className={`w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-primary hover:bg-primary-light/30 transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+            <ImagePlus size={20} className="text-gray-400" />
+            <span className="text-[10px] text-gray-500">{uploading ? 'Envoi…' : 'Ajouter'}</span>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => { handlePhotos(e.target.files); e.target.value = ''; }}
+            />
+          </label>
+        </div>
+        <p className="text-xs text-gray-400">JPEG/PNG · plusieurs photos possibles · 20 Mo max chacune.</p>
       </fieldset>
 
       {/* Footer buttons (outside form so caller places them in Drawer footer) */}

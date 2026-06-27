@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Phone, Mail, Edit2, Trash2, MapPin, Banknote,
   Calendar, Eye, MessageSquare, User, Clock, CheckCircle2,
-  Building2, ChevronRight, Star,
+  Star,
 } from 'lucide-react';
 import { useClientsStore } from '../../store/clientsStore';
+import { PropertyMatches } from '../../components/PropertyMatches';
 import { useAgentsStore } from '../../store/agentsStore';
 import { usePropertiesStore } from '../../store/propertiesStore';
 import { Badge } from '../../components/ui/Badge';
@@ -248,46 +249,7 @@ export const ClientDetail: React.FC = () => {
                 )}
 
                 {/* Biens correspondants */}
-                {activeTab === 'biens' && (
-                  matchingProps.length === 0 ? (
-                    <div className="flex flex-col items-center py-8 text-gray-400">
-                      <Building2 size={28} className="mb-2 opacity-30" />
-                      <p className="text-sm">Aucun bien disponible ne correspond aux critères</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {matchingProps.map((prop) => (
-                        <div
-                          key={prop.id}
-                          onClick={() => navigate(`/admin/biens/${prop.id}`)}
-                          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-primary-light cursor-pointer transition-colors group"
-                        >
-                          <div className="w-10 h-10 bg-white rounded-lg border border-gray-200 flex items-center justify-center flex-shrink-0">
-                            <Building2 size={16} className="text-gray-400" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-gray-800 truncate">{prop.title}</div>
-                            <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
-                              <MapPin size={11} /> {prop.location}
-                              <span>· {prop.surface} m²</span>
-                              {prop.rooms && <span>· {prop.rooms} pièces</span>}
-                            </div>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <div className="text-sm font-semibold text-gray-900">
-                              {new Intl.NumberFormat('fr-TN').format(prop.price)} DT
-                            </div>
-                            <Badge variant="disponible" size="sm" />
-                          </div>
-                          <ChevronRight size={14} className="text-gray-300 group-hover:text-primary flex-shrink-0" />
-                        </div>
-                      ))}
-                      <p className="text-xs text-gray-400 text-center pt-2">
-                        Basé sur les préférences et le budget du client
-                      </p>
-                    </div>
-                  )
-                )}
+                {activeTab === 'biens' && <PropertyMatches client={client} />}
 
                 {/* Notes */}
                 {activeTab === 'notes' && (

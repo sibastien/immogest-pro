@@ -6,10 +6,10 @@ const { clientToJSON } = require('../mappers');
 const router = express.Router();
 router.use(protect);
 
-// Admin & coordinatrice see all clients; agents see only their own.
-function scopeFilter(user) {
-  if (user.role === 'admin' || user.role === 'coordinatrice') return { sql: '', params: [] };
-  return { sql: ' WHERE agent_id = ?', params: [user.id] };
+// Contacts are a shared directory: every authenticated user sees all clients.
+// (agent_id still records who created/owns each fiche.)
+function scopeFilter() {
+  return { sql: '', params: [] };
 }
 
 function rowFromBody(b) {

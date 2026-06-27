@@ -40,9 +40,27 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return res.json() as Promise<T>;
 }
 
+// Multipart upload (files / documents). Does NOT set Content-Type so the
+// browser adds the correct multipart boundary.
+async function upload<T>(path: string, form: FormData): Promise<T> {
+  const headers: Record<string, string> = {};
+  const token = getToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(`${BASE}${path}`, { method: 'POST', headers, body: form });
+  if (res.status === 401) clearToken();
+  if (!res.ok) {
+    let msg = `Erreur ${res.status}`;
+    try { const d = await res.json(); if (d?.error) msg = d.error; } catch { /* noop */ }
+    throw new ApiError(msg, res.status);
+  }
+  return res.json() as Promise<T>;
+}
+
 export const api = {
   get:  <T>(path: string) => request<T>('GET', path),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
   put:  <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
   del:  <T>(path: string) => request<T>('DELETE', path),
+  upload,
 };

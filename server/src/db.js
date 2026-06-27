@@ -96,6 +96,20 @@ db.exec(`
     created_at   TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS documents (
+    id          TEXT PRIMARY KEY,
+    type        TEXT NOT NULL DEFAULT 'autre',
+    title       TEXT NOT NULL,
+    property_id TEXT,
+    client_id   TEXT,
+    status      TEXT NOT NULL DEFAULT 'brouillon',
+    url         TEXT,
+    size        TEXT,
+    created_at  TEXT NOT NULL,
+    expires_at  TEXT,
+    signed_at   TEXT
+  );
+
   CREATE TABLE IF NOT EXISTS comptes_rendus (
     id              TEXT PRIMARY KEY,
     visit_id        TEXT NOT NULL,

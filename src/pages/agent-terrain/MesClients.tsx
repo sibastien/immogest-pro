@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { UserPlus, Phone, CalendarPlus, Search, Users } from 'lucide-react';
 import { Badge } from '../../components/ui/Badge';
 import { useClientsStore } from '../../store/clientsStore';
-import { useAuthStore } from '../../store/authStore';
 
 const TYPE_LABELS: Record<string, string> = {
   acheteur: 'Acheteur',
@@ -20,12 +19,11 @@ const STATUS_BADGE = {
 
 export const AgentTerrainClients: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const { clients } = useClientsStore();
   const [query, setQuery] = useState('');
 
+  // Contacts are shared across the whole team.
   const myClients = clients
-    .filter((c) => c.agentId === user?.agentId)
     .filter((c) => {
       if (!query.trim()) return true;
       const q = query.toLowerCase();
@@ -36,8 +34,8 @@ export const AgentTerrainClients: React.FC = () => {
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Mes clients</h2>
-          <p className="text-sm text-gray-400">{myClients.length} fiche{myClients.length !== 1 ? 's' : ''}</p>
+          <h2 className="text-base font-semibold text-gray-900">Contacts</h2>
+          <p className="text-sm text-gray-400">{myClients.length} fiche{myClients.length !== 1 ? 's' : ''} · partagées</p>
         </div>
         <button
           onClick={() => navigate('/agent-terrain/nouvelle-fiche')}

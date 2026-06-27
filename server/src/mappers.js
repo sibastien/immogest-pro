@@ -125,4 +125,20 @@ function propertyToJSON(row) {
   };
 }
 
-module.exports = { userToAgent, userToAuth, clientToJSON, callToJSON, visitToJSON, crToJSON, propertyToJSON };
+function documentToJSON(row) {
+  return {
+    id: row.id,
+    type: row.type,
+    title: row.title,
+    propertyId: row.property_id || undefined,
+    clientId: row.client_id || undefined,
+    status: row.status,
+    url: row.url || undefined,
+    size: row.size || '',
+    createdAt: row.created_at,
+    expiresAt: row.expires_at || undefined,
+    signedAt: row.signed_at || undefined,
+  };
+}
+
+module.exports = { userToAgent, userToAuth, clientToJSON, callToJSON, visitToJSON, crToJSON, propertyToJSON, documentToJSON };

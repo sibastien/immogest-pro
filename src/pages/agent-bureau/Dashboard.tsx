@@ -1,33 +1,27 @@
 import React from 'react';
-import { Phone, UserPlus, CheckSquare, Calendar, AlertTriangle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Phone, UserPlus, Calendar, AlertTriangle, PhoneOff } from 'lucide-react';
 import { Card, CardHeader } from '../../components/ui/Card';
 import { StatCard } from '../../components/ui/StatCard';
 import { Badge } from '../../components/ui/Badge';
 import { useClientsStore } from '../../store/clientsStore';
+import { useCallsStore } from '../../store/callsStore';
 import { useAgentsStore } from '../../store/agentsStore';
 import { useAuthStore } from '../../store/authStore';
 import { todayISO, todayLabelFr } from '../../lib/today';
 
-const TASKS: { id: number; label: string; done: boolean; urgent: boolean }[] = [];
-
 export const AgentBureauDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const { clients } = useClientsStore();
+  const { calls } = useCallsStore();
   const { appointments } = useAgentsStore();
 
-  const [tasks, setTasks] = React.useState(TASKS);
-
-  const myClients = clients.filter((c) => c.agentId === user?.agentId);
-  const activeClients = myClients.filter((c) => c.status === 'actif');
-  const toRelance = myClients.filter((c) => c.status === 'a_relancer');
-
-  const todayRdv = appointments.filter(
-    (a) => a.date === todayISO() && a.agentId === user?.agentId
-  );
-
-  const toggleTask = (id: number) => {
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)));
-  };
+  // Contacts and calls are shared across the team.
+  const activeClients = clients.filter((c) => c.status === 'actif');
+  const toRelance = clients.filter((c) => c.status === 'a_relancer');
+  const rappels = calls.filter((c) => c.outcome === 'rappel');
+  const todayRdv = appointments.filter((a) => a.date === todayISO() && a.agentId === user?.agentId);
 
   return (
     <div className="space-y-5">
@@ -39,7 +33,7 @@ export const AgentBureauDashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <StatCard label="Mes clients actifs" value={activeClients.length} icon={UserPlus} color="blue" />
+        <StatCard label="Clients actifs" value={activeClients.length} icon={UserPlus} color="blue" />
         <StatCard
           label="À relancer"
           value={toRelance.length}
@@ -47,50 +41,37 @@ export const AgentBureauDashboard: React.FC = () => {
           color={toRelance.length > 0 ? 'amber' : 'green'}
         />
         <StatCard label="RDV aujourd'hui" value={todayRdv.length} icon={Calendar} color="purple" />
-        <StatCard label="Appels à traiter" value={0} icon={Phone} color="red" />
+        <StatCard label="Appels à rappeler" value={rappels.length} icon={Phone} color="red" />
       </div>
 
       <div className="grid grid-cols-2 gap-5">
-        {/* Tâches du jour */}
+        {/* Appels à rappeler */}
         <Card>
           <CardHeader
-            title="Tâches du jour"
-            subtitle={`${tasks.filter((t) => t.done).length}/${tasks.length} complétées`}
-            action={
-              <CheckSquare size={16} className="text-gray-400" />
-            }
+            title="Appels à rappeler"
+            subtitle={`${rappels.length} en attente`}
+            action={<PhoneOff size={16} className="text-gray-400" />}
           />
-          <div className="space-y-2">
-            {tasks.map((task) => (
-              <label
-                key={task.id}
-                className={[
-                  'flex items-start gap-3 p-2 rounded-lg cursor-pointer transition-colors',
-                  task.done ? 'opacity-50' : 'hover:bg-gray-50',
-                ].join(' ')}
-              >
-                <input
-                  type="checkbox"
-                  checked={task.done}
-                  onChange={() => toggleTask(task.id)}
-                  className="mt-0.5 accent-primary"
-                />
-                <div className="flex-1 min-w-0">
-                  <span
-                    className={`text-sm ${task.done ? 'line-through text-gray-400' : 'text-gray-700'}`}
+          {rappels.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-6">Aucun rappel en attente</p>
+          ) : (
+            <div className="space-y-2">
+              {rappels.slice(0, 6).map((call) => (
+                <div key={call.id} className="flex items-center gap-3 p-2 bg-warning-light rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-800 truncate">{call.clientName}</div>
+                    <div className="text-xs text-gray-500 truncate">{call.notes}</div>
+                  </div>
+                  <button
+                    onClick={() => navigate('/agent-bureau/appels')}
+                    className="flex items-center gap-1 text-xs text-warning font-medium flex-shrink-0"
                   >
-                    {task.label}
-                  </span>
+                    <Phone size={12} /> Rappeler
+                  </button>
                 </div>
-                {task.urgent && !task.done && (
-                  <Badge variant="urgent" size="sm" label="Urgent" />
-                )}
-              </label>
-            ))}
-            {tasks.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-6">Aucune tâche pour le moment</p>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </Card>
 
         {/* Prospects à relancer */}
@@ -107,10 +88,11 @@ export const AgentBureauDashboard: React.FC = () => {
             <p className="text-sm text-gray-400 text-center py-6">Aucun prospect à relancer</p>
           ) : (
             <div className="space-y-2">
-              {toRelance.map((client) => (
+              {toRelance.slice(0, 6).map((client) => (
                 <div
                   key={client.id}
-                  className="flex items-center gap-3 p-2 bg-warning-light rounded-lg"
+                  onClick={() => navigate(`/agent-bureau/prospects`)}
+                  className="flex items-center gap-3 p-2 bg-gray-50 hover:bg-warning-light rounded-lg cursor-pointer transition-colors"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-gray-800">{client.name}</div>
@@ -118,10 +100,7 @@ export const AgentBureauDashboard: React.FC = () => {
                       Dernier contact : {new Date(client.lastContact).toLocaleDateString('fr-TN')}
                     </div>
                   </div>
-                  <button className="flex items-center gap-1 text-xs text-warning font-medium">
-                    <Phone size={12} />
-                    Appeler
-                  </button>
+                  <Phone size={12} className="text-warning flex-shrink-0" />
                 </div>
               ))}
             </div>
@@ -135,10 +114,7 @@ export const AgentBureauDashboard: React.FC = () => {
           <CardHeader title="Mes rendez-vous aujourd'hui" />
           <div className="space-y-2">
             {todayRdv.map((appt) => (
-              <div
-                key={appt.id}
-                className="flex items-center gap-4 p-3 bg-primary-light rounded-lg"
-              >
+              <div key={appt.id} className="flex items-center gap-4 p-3 bg-primary-light rounded-lg">
                 <span className="text-sm font-mono font-medium text-primary w-12">{appt.time}</span>
                 <div className="flex-1">
                   <div className="text-sm font-medium text-gray-800">{appt.title}</div>

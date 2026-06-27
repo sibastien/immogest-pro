@@ -1,28 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FileText, Upload, Download, Eye, Search,
-  CheckCircle2, Clock, AlertCircle, X, Plus, FolderOpen,
+  CheckCircle2, Clock, AlertCircle, X, Plus, FolderOpen, Trash2,
 } from 'lucide-react';
 import { Badge } from '../../components/ui/Badge';
 import { Card } from '../../components/ui/Card';
 import { usePropertiesStore } from '../../store/propertiesStore';
 import { useClientsStore } from '../../store/clientsStore';
-
-type DocType    = 'mandat_vente' | 'mandat_location' | 'compromis' | 'acte' | 'bail' | 'autre';
-type DocStatus  = 'brouillon' | 'en_attente_signature' | 'signe' | 'expire';
-
-interface Document {
-  id: string;
-  type: DocType;
-  title: string;
-  propertyId?: string;
-  clientId?: string;
-  status: DocStatus;
-  createdAt: string;
-  expiresAt?: string;
-  signedAt?: string;
-  size: string;
-}
+import { useDocumentsStore } from '../../store/documentsStore';
+import type { DocType, DocStatus } from '../../store/documentsStore';
 
 const DOC_TYPE_CONFIG: Record<DocType, { label: string; color: string; icon: string }> = {
   mandat_vente:       { label: 'Mandat de vente',      color: 'text-primary',  icon: '📋' },
@@ -40,17 +26,52 @@ const STATUS_CONFIG: Record<DocStatus, { label: string; variant: 'gray' | 'a_rel
   expire:               { label: 'Expiré',            variant: 'urgent' },
 };
 
-const MOCK_DOCS: Document[] = [];
-
 export const AdminDocuments: React.FC = () => {
   const { properties } = usePropertiesStore();
   const { clients }    = useClientsStore();
+  const { documents: docs, load, addDocument, removeDocument } = useDocumentsStore();
 
-  const [docs]          = useState<Document[]>(MOCK_DOCS);
   const [search, setSearch]       = useState('');
   const [typeFilter, setTypeFilter]   = useState<DocType | ''>('');
   const [statusFilter, setStatusFilter] = useState<DocStatus | ''>('');
   const [drawerOpen, setDrawerOpen]   = useState(false);
+
+  // New-document form
+  const [form, setForm] = useState<{ title: string; type: DocType; status: DocStatus; propertyId: string; clientId: string; expiresAt: string }>(
+    { title: '', type: 'mandat_vente', status: 'brouillon', propertyId: '', clientId: '', expiresAt: '' }
+  );
+  const [file, setFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  useEffect(() => { load(); }, [load]);
+
+  const resetForm = () => {
+    setForm({ title: '', type: 'mandat_vente', status: 'brouillon', propertyId: '', clientId: '', expiresAt: '' });
+    setFile(null); setFormError('');
+  };
+
+  const handleCreate = async () => {
+    if (!form.title.trim()) { setFormError('Le titre est obligatoire.'); return; }
+    setSaving(true);
+    try {
+      await addDocument({
+        title: form.title.trim(),
+        type: form.type,
+        status: form.status,
+        propertyId: form.propertyId || undefined,
+        clientId: form.clientId || undefined,
+        expiresAt: form.expiresAt || undefined,
+        file,
+      });
+      resetForm();
+      setDrawerOpen(false);
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Échec de l'enregistrement.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const filtered = docs.filter((d) => {
     if (typeFilter && d.type !== typeFilter)     return false;
@@ -162,11 +183,26 @@ export const AdminDocuments: React.FC = () => {
                 {/* Status + Actions */}
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <Badge variant={statusCfg.variant} size="sm" label={statusCfg.label} />
-                  <button className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-gray-500 hover:text-primary">
-                    <Eye size={14} />
-                  </button>
-                  <button className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-gray-500 hover:text-primary">
-                    <Download size={14} />
+                  {doc.url ? (
+                    <>
+                      <a href={doc.url} target="_blank" rel="noreferrer" title="Ouvrir"
+                        className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-gray-500 hover:text-primary">
+                        <Eye size={14} />
+                      </a>
+                      <a href={doc.url} download title="Télécharger"
+                        className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-gray-500 hover:text-primary">
+                        <Download size={14} />
+                      </a>
+                    </>
+                  ) : (
+                    <span className="text-xs text-gray-300 px-1">Aucun fichier</span>
+                  )}
+                  <button
+                    onClick={() => { if (window.confirm(`Supprimer « ${doc.title} » ?`)) removeDocument(doc.id); }}
+                    title="Supprimer"
+                    className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-gray-400 hover:text-danger"
+                  >
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>
@@ -183,23 +219,89 @@ export const AdminDocuments: React.FC = () => {
         )}
       </div>
 
-      {/* Upload placeholder drawer */}
+      {/* Add-document drawer */}
       {drawerOpen && (
-        <div className="fixed inset-0 bg-black/30 z-50 flex items-end sm:items-center justify-center" onClick={() => setDrawerOpen(false)}>
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/30 z-50 flex items-end sm:items-center justify-center" onClick={() => { setDrawerOpen(false); resetForm(); }}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-semibold text-gray-900 mb-1">Ajouter un document</h3>
-            <p className="text-sm text-gray-400 mb-5">Importez un fichier PDF ou Word</p>
-            <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center cursor-pointer hover:border-primary hover:bg-primary-light/30 transition-colors">
-              <Upload size={24} className="text-gray-400 mx-auto mb-3" />
-              <p className="text-sm text-gray-600 font-medium">Glissez un fichier ici</p>
-              <p className="text-xs text-gray-400 mt-1">PDF, DOCX — max 10 Mo</p>
-              <button className="mt-4 px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90">
-                Parcourir…
-              </button>
+            <p className="text-sm text-gray-400 mb-4">Importez un fichier et reliez-le à un bien</p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Titre *</label>
+                <input
+                  type="text" value={form.title}
+                  onChange={(e) => { setForm((f) => ({ ...f, title: e.target.value })); setFormError(''); }}
+                  placeholder="Ex: Mandat de vente — Villa La Marsa"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Type</label>
+                  <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as DocType }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30">
+                    {Object.entries(DOC_TYPE_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Statut</label>
+                  <select value={form.status} onChange={(e) => setForm((f) => ({ ...f, status: e.target.value as DocStatus }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30">
+                    {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Bien lié (par référence)</label>
+                <select value={form.propertyId} onChange={(e) => setForm((f) => ({ ...f, propertyId: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30">
+                  <option value="">— Aucun —</option>
+                  {properties.map((p) => <option key={p.id} value={p.id}>{p.ref} · {p.title}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Client lié (optionnel)</label>
+                <select value={form.clientId} onChange={(e) => setForm((f) => ({ ...f, clientId: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30">
+                  <option value="">— Aucun —</option>
+                  {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Date d'expiration (optionnel)</label>
+                <input type="date" value={form.expiresAt}
+                  onChange={(e) => setForm((f) => ({ ...f, expiresAt: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30" />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1.5">Fichier</label>
+                <label className="border-2 border-dashed border-gray-200 rounded-xl p-5 text-center cursor-pointer hover:border-primary hover:bg-primary-light/30 transition-colors flex flex-col items-center">
+                  <Upload size={20} className="text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-600 font-medium">{file ? file.name : 'Choisir un fichier'}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">PDF, DOCX, image — 20 Mo max</p>
+                  <input type="file" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+                </label>
+              </div>
+
+              {formError && <p className="text-xs text-danger">{formError}</p>}
+
+              <div className="flex gap-3 pt-1">
+                <button onClick={() => { setDrawerOpen(false); resetForm(); }}
+                  className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
+                  Annuler
+                </button>
+                <button onClick={handleCreate} disabled={saving}
+                  className="flex-1 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50">
+                  {saving ? 'Enregistrement…' : 'Enregistrer'}
+                </button>
+              </div>
             </div>
-            <button onClick={() => setDrawerOpen(false)} className="mt-4 w-full py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
-              Annuler
-            </button>
           </div>
         </div>
       )}
