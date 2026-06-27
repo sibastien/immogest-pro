@@ -99,4 +99,30 @@ function crToJSON(row) {
   };
 }
 
-module.exports = { userToAgent, userToAuth, clientToJSON, callToJSON, visitToJSON, crToJSON };
+function propertyToJSON(row) {
+  return {
+    id: row.id,
+    ref: row.ref,
+    title: row.title,
+    type: row.type,
+    status: row.status,
+    price: row.price,
+    priceType: row.price_type,
+    surface: row.surface,
+    rooms: row.rooms ?? undefined,
+    bathrooms: row.bathrooms ?? undefined,
+    location: row.location,
+    address: row.address,
+    agentId: row.agent_id,
+    photos: parseJSON(row.photos, []),
+    createdAt: row.created_at,
+    description: row.description || undefined,
+    features: parseJSON(row.features, []),
+    floor: row.floor ?? undefined,
+    totalFloors: row.total_floors ?? undefined,
+    parking: row.parking == null ? undefined : !!row.parking,
+    furnished: row.furnished == null ? undefined : !!row.furnished,
+  };
+}
+
+module.exports = { userToAgent, userToAuth, clientToJSON, callToJSON, visitToJSON, crToJSON, propertyToJSON };

@@ -97,6 +97,7 @@ export interface CompteRendu {
 export interface Call {
   id: string;
   agentId: string;
+  agentName?: string;
   clientId?: string;
   clientName: string;
   phone?: string;

@@ -6,24 +6,21 @@ const { callToJSON } = require('../mappers');
 const router = express.Router();
 router.use(protect);
 
-function canSeeAll(user) {
-  return user.role === 'admin' || user.role === 'coordinatrice';
+function canSeeAll() {
+  return true;
 }
 
-// GET /api/calls — admin/coordinatrice: all (oversight). Agents: own only.
-// Optional ?agentId= filter for the admin oversight page.
+// GET /api/calls — shared team call log: every authenticated user sees all calls.
+// Optional ?agentId= filter. Each call carries the name of the agent who made it.
 router.get('/', (req, res) => {
-  let rows;
-  if (canSeeAll(req.user)) {
-    if (req.query.agentId) {
-      rows = db.prepare('SELECT * FROM calls WHERE agent_id = ? ORDER BY date DESC, time DESC').all(req.query.agentId);
-    } else {
-      rows = db.prepare('SELECT * FROM calls ORDER BY date DESC, time DESC').all();
-    }
-  } else {
-    rows = db.prepare('SELECT * FROM calls WHERE agent_id = ? ORDER BY date DESC, time DESC').all(req.user.id);
-  }
-  res.json(rows.map(callToJSON));
+  const rows = req.query.agentId
+    ? db.prepare('SELECT * FROM calls WHERE agent_id = ? ORDER BY date DESC, time DESC').all(req.query.agentId)
+    : db.prepare('SELECT * FROM calls ORDER BY date DESC, time DESC').all();
+
+  const names = {};
+  for (const u of db.prepare('SELECT id, name FROM users').all()) names[u.id] = u.name;
+
+  res.json(rows.map((r) => ({ ...callToJSON(r), agentName: names[r.agent_id] || 'Agent' })));
 });
 
 // POST /api/calls
@@ -33,7 +30,8 @@ router.post('/', (req, res) => {
   if (!b.notes?.trim()) return res.status(400).json({ error: 'Le contenu de l\'appel est requis.' });
 
   const id = b.id || `call-${Date.now()}`;
-  const agentId = canSeeAll(req.user) ? (b.agentId || req.user.id) : req.user.id;
+  // A call is always attributed to whoever logs it (agent, coordinatrice or admin).
+  const agentId = req.user.id;
   const today = new Date().toISOString().split('T')[0];
 
   db.prepare(`

@@ -12,6 +12,7 @@ app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/clients', require('./routes/clients'));
+app.use('/api/properties', require('./routes/properties'));
 app.use('/api/calls', require('./routes/calls'));
 app.use('/api/visits', require('./routes/visits'));
 app.use('/api/comptes-rendus', require('./routes/comptesRendus'));

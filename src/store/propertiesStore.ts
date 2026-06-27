@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Property, PropertyType, PropertyStatus } from '../types';
-import { mockProperties } from '../data/mockProperties';
+import { api } from '../lib/api';
 
 interface PropertyFilters {
   type?: PropertyType;
@@ -14,8 +14,10 @@ interface PropertyFilters {
 
 interface PropertiesState {
   properties: Property[];
+  loaded: boolean;
   filters: PropertyFilters;
   selectedProperty: Property | null;
+  load: () => Promise<void>;
   setFilters: (filters: Partial<PropertyFilters>) => void;
   resetFilters: () => void;
   selectProperty: (id: string | null) => void;
@@ -26,9 +28,19 @@ interface PropertiesState {
 }
 
 export const usePropertiesStore = create<PropertiesState>((set, get) => ({
-  properties: mockProperties,
+  properties: [],
+  loaded: false,
   filters: {},
   selectedProperty: null,
+
+  load: async () => {
+    try {
+      const properties = await api.get<Property[]>('/properties');
+      set({ properties, loaded: true });
+    } catch {
+      set({ loaded: true });
+    }
+  },
 
   setFilters: (filters) =>
     set((state) => ({ filters: { ...state.filters, ...filters } })),
@@ -40,18 +52,27 @@ export const usePropertiesStore = create<PropertiesState>((set, get) => ({
     set({ selectedProperty: property });
   },
 
-  addProperty: (property) =>
-    set((state) => ({ properties: [property, ...state.properties] })),
+  // Optimistic: show immediately, persist to the API, resync on failure.
+  addProperty: (property) => {
+    set((state) => ({ properties: [property, ...state.properties] }));
+    api.post<Property>('/properties', property)
+      .then((saved) => set((state) => ({
+        properties: state.properties.map((p) => (p.id === property.id ? saved : p)),
+      })))
+      .catch(() => get().load());
+  },
 
-  updateProperty: (id, updates) =>
+  updateProperty: (id, updates) => {
     set((state) => ({
       properties: state.properties.map((p) => (p.id === id ? { ...p, ...updates } : p)),
-    })),
+    }));
+    api.put<Property>(`/properties/${id}`, updates).catch(() => get().load());
+  },
 
-  deleteProperty: (id) =>
-    set((state) => ({
-      properties: state.properties.filter((p) => p.id !== id),
-    })),
+  deleteProperty: (id) => {
+    set((state) => ({ properties: state.properties.filter((p) => p.id !== id) }));
+    api.del(`/properties/${id}`).catch(() => get().load());
+  },
 
   getFilteredProperties: () => {
     const { properties, filters } = get();

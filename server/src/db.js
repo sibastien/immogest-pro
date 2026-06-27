@@ -72,6 +72,30 @@ db.exec(`
     created_at   TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS properties (
+    id           TEXT PRIMARY KEY,
+    ref          TEXT,
+    title        TEXT NOT NULL,
+    type         TEXT NOT NULL DEFAULT 'vente_residentielle',
+    status       TEXT NOT NULL DEFAULT 'disponible',
+    price        INTEGER NOT NULL DEFAULT 0,
+    price_type   TEXT NOT NULL DEFAULT 'vente',
+    surface      INTEGER NOT NULL DEFAULT 0,
+    rooms        INTEGER,
+    bathrooms    INTEGER,
+    location     TEXT DEFAULT '',
+    address      TEXT DEFAULT '',
+    agent_id     TEXT DEFAULT '',
+    photos       TEXT,
+    description  TEXT,
+    features     TEXT,
+    floor        INTEGER,
+    total_floors INTEGER,
+    parking      INTEGER,
+    furnished    INTEGER,
+    created_at   TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS comptes_rendus (
     id              TEXT PRIMARY KEY,
     visit_id        TEXT NOT NULL,

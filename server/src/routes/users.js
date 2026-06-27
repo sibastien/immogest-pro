@@ -9,12 +9,19 @@ const router = express.Router();
 // All user/agent management is admin-only.
 router.use(protect);
 
-// GET /api/users — list agents/team (everyone except clients). Admin + coordinatrice may read.
-router.get('/', requireRole('admin', 'coordinatrice'), (req, res) => {
+// GET /api/users — team list (everyone except clients). Any authenticated user
+// may read it (needed to pick a "responsable" when creating a bien), but the
+// access code is only exposed to admin/coordinatrice.
+router.get('/', (req, res) => {
   const rows = db
     .prepare("SELECT * FROM users WHERE role != 'client' ORDER BY created_at DESC")
     .all();
-  res.json(rows.map(userToAgent));
+  const privileged = req.user.role === 'admin' || req.user.role === 'coordinatrice';
+  res.json(rows.map((r) => {
+    const agent = userToAgent(r);
+    if (!privileged) delete agent.accessCode;
+    return agent;
+  }));
 });
 
 // POST /api/users — create an agent login (admin only).

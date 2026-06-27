@@ -4,6 +4,7 @@ import { useAuthStore, dashboardPathByRole } from '../store/authStore';
 import { useClientsStore } from '../store/clientsStore';
 import { useAgentsStore } from '../store/agentsStore';
 import { useCallsStore } from '../store/callsStore';
+import { usePropertiesStore } from '../store/propertiesStore';
 
 // Layouts
 import { AdminLayout } from '../components/layout/AdminLayout';
@@ -55,6 +56,9 @@ import { AgentTerrainNouvelleFiche } from '../pages/agent-terrain/NouvelleFiche'
 import { AgentTerrainAppels } from '../pages/agent-terrain/Appels';
 import { AgentTerrainPlanifierVisite } from '../pages/agent-terrain/PlanifierVisite';
 
+// Shared
+import { NouveauBien } from '../pages/shared/NouveauBien';
+
 // Client
 import { ClientDashboard } from '../pages/client/Dashboard';
 import { ClientDocuments } from '../pages/client/Documents';
@@ -67,6 +71,7 @@ function useBootstrapData(isAuthenticated: boolean) {
     if (!isAuthenticated) return;
     useClientsStore.getState().load();
     useCallsStore.getState().load();
+    usePropertiesStore.getState().load();
     const agents = useAgentsStore.getState();
     agents.loadAgents();
     agents.loadVisits();
@@ -147,6 +152,7 @@ export const router = createBrowserRouter([
           { path: 'carte', element: <CoordinatriceCarteAgents /> },
           { path: 'dossiers', element: <CoordinatriceDossiers /> },
           { path: 'planning', element: <CoordinatricePlanning /> },
+          { path: 'nouveau-bien', element: <NouveauBien /> },
         ],
       },
     ],
@@ -165,6 +171,7 @@ export const router = createBrowserRouter([
           { path: 'prospects', element: <AgentBureauProspects /> },
           { path: 'nouvelle-fiche', element: <AgentBureauNouvelleFiche /> },
           { path: 'catalogue', element: <AgentBureauCatalogue /> },
+          { path: 'nouveau-bien', element: <NouveauBien /> },
           { path: 'agenda', element: <AdminAgenda /> },
         ],
       },
@@ -187,6 +194,7 @@ export const router = createBrowserRouter([
           { path: 'appels', element: <AgentTerrainAppels /> },
           { path: 'clients', element: <AgentTerrainClients /> },
           { path: 'nouvelle-fiche', element: <AgentTerrainNouvelleFiche /> },
+          { path: 'nouveau-bien', element: <NouveauBien /> },
           { path: 'performance', element: <AgentTerrainPerformance /> },
         ],
       },

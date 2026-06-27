@@ -3,7 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import {
-  LayoutDashboard, Phone, UserPlus, FilePlus, BookOpen, CalendarDays,
+  LayoutDashboard, Phone, UserPlus, FilePlus, BookOpen, CalendarDays, Building2,
 } from 'lucide-react';
 
 const PAGE_TITLES: Record<string, string> = {
@@ -12,6 +12,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/agent-bureau/prospects':     'Mes prospects',
   '/agent-bureau/nouvelle-fiche':'Nouvelle fiche client',
   '/agent-bureau/catalogue':     'Catalogue des biens',
+  '/agent-bureau/nouveau-bien':  'Nouveau bien',
   '/agent-bureau/agenda':        'Mon agenda',
 };
 
@@ -25,6 +26,7 @@ export const AgentBureauLayout: React.FC = () => {
     { label: 'Prospects',       path: '/agent-bureau/prospects',     icon: UserPlus },
     { label: 'Nouvelle fiche',  path: '/agent-bureau/nouvelle-fiche',icon: FilePlus },
     { label: 'Catalogue',       path: '/agent-bureau/catalogue',     icon: BookOpen },
+    { label: 'Nouveau bien',    path: '/agent-bureau/nouveau-bien',  icon: Building2 },
     { label: 'Agenda',          path: '/agent-bureau/agenda',        icon: CalendarDays },
   ];
 

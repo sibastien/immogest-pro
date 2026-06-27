@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, X } from 'lucide-react';
 import { usePropertiesStore } from '../../store/propertiesStore';
 import { useAgentsStore } from '../../store/agentsStore';
+import { useAuthStore } from '../../store/authStore';
 import type { Property, PropertyType, PropertyStatus } from '../../types';
 
 const TYPE_OPTIONS: { value: PropertyType; label: string }[] = [
@@ -51,9 +52,10 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
   const isEdit = !!property;
   const { addProperty, updateProperty } = usePropertiesStore();
   const { agents } = useAgentsStore();
+  const { user } = useAuthStore();
 
   const terrainAgents = agents.filter((a) =>
-    ['agent_terrain', 'agent_bureau'].includes(a.role)
+    ['agent_terrain', 'agent_bureau', 'coordinatrice', 'admin'].includes(a.role)
   );
 
   const [form, setForm] = useState<FormData>({
@@ -68,7 +70,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
     bathrooms:   property?.bathrooms,
     location:    property?.location    ?? '',
     address:     property?.address     ?? '',
-    agentId:     property?.agentId     ?? (terrainAgents[0]?.id ?? ''),
+    agentId:     property?.agentId     ?? user?.agentId ?? (terrainAgents[0]?.id ?? ''),
     description: property?.description ?? '',
     features:    property?.features    ?? [],
     floor:       property?.floor,
