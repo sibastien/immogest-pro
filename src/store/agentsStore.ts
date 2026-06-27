@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { Agent, Visit, Transaction, CompteRendu, Appointment } from '../types';
-import { mockTransactions, mockAppointments } from '../data/mockTransactions';
+import { mockAppointments } from '../data/mockTransactions';
+import { usePropertiesStore } from './propertiesStore';
+import { useClientsStore } from './clientsStore';
 import { api } from '../lib/api';
 
 interface AgentsState {
@@ -9,10 +11,11 @@ interface AgentsState {
   transactions: Transaction[];
   comptesRendus: CompteRendu[];
   appointments: Appointment[];
-  // API loaders (agents / visits / comptes-rendus are server-backed in Phase 1)
+  // API loaders
   loadAgents: () => Promise<void>;
   loadVisits: () => Promise<void>;
   loadComptesRendus: () => Promise<void>;
+  loadTransactions: () => Promise<void>;
   addAgent: (agent: Agent) => void;
   removeAgent: (id: string) => void;
   updateAgentStatus: (id: string, status: Agent['status']) => void;
@@ -25,14 +28,16 @@ interface AgentsState {
   validateCR: (crId: string) => void;
   rejectCR: (crId: string, reason: string) => void;
   addTransaction: (tx: Transaction) => void;
+  updateTransaction: (id: string, updates: Partial<Transaction>) => void;
+  closeTransaction: (id: string) => void;
 }
 
 export const useAgentsStore = create<AgentsState>((set, get) => ({
   agents: [],
   visits: [],
   comptesRendus: [],
-  // Not yet migrated (Phase 2) — still seeded from mock data.
-  transactions: mockTransactions,
+  transactions: [],
+  // Appointments not yet migrated (Phase 2) — still seeded from mock data.
   appointments: mockAppointments,
 
   loadAgents: async () => {
@@ -43,6 +48,9 @@ export const useAgentsStore = create<AgentsState>((set, get) => ({
   },
   loadComptesRendus: async () => {
     try { set({ comptesRendus: await api.get<CompteRendu[]>('/comptes-rendus') }); } catch { /* keep cache */ }
+  },
+  loadTransactions: async () => {
+    try { set({ transactions: await api.get<Transaction[]>('/transactions') }); } catch { /* keep cache */ }
   },
 
   addAgent: (agent) => {
@@ -122,6 +130,44 @@ export const useAgentsStore = create<AgentsState>((set, get) => ({
       .catch(() => get().loadComptesRendus());
   },
 
-  addTransaction: (tx) =>
-    set((state) => ({ transactions: [tx, ...state.transactions] })),
+  addTransaction: (tx) => {
+    set((state) => ({ transactions: [tx, ...state.transactions] }));
+    api.post<Transaction>('/transactions', tx)
+      .then((saved) => set((state) => ({
+        transactions: state.transactions.map((t) => (t.id === tx.id ? saved : t)),
+      })))
+      .catch(() => get().loadTransactions());
+  },
+
+  updateTransaction: (id, updates) => {
+    set((state) => ({
+      transactions: state.transactions.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+    }));
+    api.put<Transaction>(`/transactions/${id}`, updates).catch(() => get().loadTransactions());
+  },
+
+  // Mark as sold/rented: closes the deal and, server-side, flips the property to
+  // vendu/loué and the client to clôturé. We mirror those locally so the UI updates.
+  closeTransaction: (id) => {
+    const tx = get().transactions.find((t) => t.id === id);
+    set((state) => ({
+      transactions: state.transactions.map((t) =>
+        t.id === id ? { ...t, stage: 'cloture' as const, updatedAt: new Date().toISOString() } : t
+      ),
+    }));
+    if (tx) {
+      const isRental = tx.type === 'location_residentielle';
+      if (tx.propertyId) {
+        usePropertiesStore.getState().updateProperty(tx.propertyId, { status: isRental ? 'loue' : 'vendu' });
+      }
+      if (tx.clientId) {
+        useClientsStore.getState().updateClient(tx.clientId, { status: 'cloture' });
+      }
+    }
+    api.post<Transaction>(`/transactions/${id}/close`).catch(() => {
+      get().loadTransactions();
+      usePropertiesStore.getState().load();
+      useClientsStore.getState().load();
+    });
+  },
 }));

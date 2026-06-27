@@ -218,8 +218,19 @@ export const AdminProperties: React.FC = () => {
                     >
                       <td className="px-4 py-3 font-mono text-xs text-gray-400">{p.ref}</td>
                       <td className="px-4 py-3">
-                        <div className="font-medium text-gray-800 text-xs">{p.title}</div>
-                        <div className="text-xs text-gray-400 mt-0.5">{TYPE_LABELS[p.type]}</div>
+                        <div className="flex items-center gap-2.5">
+                          {p.photos && p.photos.length > 0 ? (
+                            <img src={p.photos[0]} alt="" className="w-11 h-11 rounded-lg object-cover flex-shrink-0 bg-gray-100" />
+                          ) : (
+                            <div className="w-11 h-11 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                              <Building2 size={16} className="text-gray-300" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <div className="font-medium text-gray-800 text-xs truncate max-w-[160px]">{p.title}</div>
+                            <div className="text-xs text-gray-400 mt-0.5">{TYPE_LABELS[p.type]}</div>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 text-xs text-gray-600">

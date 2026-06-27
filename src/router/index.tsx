@@ -76,6 +76,7 @@ function useBootstrapData(isAuthenticated: boolean) {
     agents.loadAgents();
     agents.loadVisits();
     agents.loadComptesRendus();
+    agents.loadTransactions();
   }, [isAuthenticated]);
 }
 

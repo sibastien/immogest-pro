@@ -26,25 +26,35 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export const AdminPipeline: React.FC = () => {
-  const { transactions, agents, addTransaction } = useAgentsStore();
+  const { transactions, agents, updateTransaction, closeTransaction } = useAgentsStore();
   const { properties } = usePropertiesStore();
   const { clients }    = useClientsStore();
 
   const [dragging, setDragging]   = useState<string | null>(null);
   const [dragOver, setDragOver]   = useState<Stage | null>(null);
-  const [txList, setTxList]       = useState<Transaction[]>(transactions);
 
-  // KPIs
-  const totalCA     = txList.reduce((s, t) => s + t.amount, 0);
-  const inProgress  = txList.filter((t) => !['cloture'].includes(t.stage)).length;
-  const closedThisMonth = txList.filter((t) => t.stage === 'cloture').length;
+  // KPIs (live from the shared store)
+  const totalCA     = transactions.reduce((s, t) => s + t.amount, 0);
+  const inProgress  = transactions.filter((t) => t.stage !== 'cloture').length;
+  const closedThisMonth = transactions.filter((t) => t.stage === 'cloture').length;
 
   const handleDragStart = (id: string) => setDragging(id);
   const handleDragOver  = (e: React.DragEvent, stage: Stage) => { e.preventDefault(); setDragOver(stage); };
   const handleDrop      = (stage: Stage) => {
-    if (!dragging) return;
-    setTxList((prev) => prev.map((t) => t.id === dragging ? { ...t, stage, updatedAt: new Date().toISOString() } : t));
-    addTransaction({ ...txList.find((t) => t.id === dragging)!, stage, updatedAt: new Date().toISOString() });
+    if (!dragging) { setDragOver(null); return; }
+    const tx = transactions.find((t) => t.id === dragging);
+    if (tx && tx.stage !== stage) {
+      if (stage === 'cloture') {
+        // Reaching Clôture marks the bien sold/rented + client clôturé.
+        const isRental = tx.type === 'location_residentielle';
+        const prop = properties.find((p) => p.id === tx.propertyId);
+        if (window.confirm(`Clôturer cette transaction ?\nLe bien « ${prop?.title ?? ''} » sera marqué comme ${isRental ? 'loué' : 'vendu'} et le client comme clôturé.`)) {
+          closeTransaction(tx.id);
+        }
+      } else {
+        updateTransaction(tx.id, { stage });
+      }
+    }
     setDragging(null);
     setDragOver(null);
   };
@@ -56,7 +66,7 @@ export const AdminPipeline: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Pipeline de ventes</h2>
-          <p className="text-sm text-gray-400">{txList.length} dossiers actifs</p>
+          <p className="text-sm text-gray-400">{transactions.length} dossiers actifs</p>
         </div>
       </div>
 
@@ -70,7 +80,7 @@ export const AdminPipeline: React.FC = () => {
       {/* Kanban */}
       <div className="flex gap-3 overflow-x-auto pb-3" style={{ minHeight: 480 }}>
         {STAGES.map((stage) => {
-          const stageTxs = txList.filter((t) => t.stage === stage.id);
+          const stageTxs = transactions.filter((t) => t.stage === stage.id);
           const stageCA  = stageTxs.reduce((s, t) => s + t.amount, 0);
           const isOver   = dragOver === stage.id;
 

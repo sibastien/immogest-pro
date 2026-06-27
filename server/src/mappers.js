@@ -125,6 +125,23 @@ function propertyToJSON(row) {
   };
 }
 
+function transactionToJSON(row) {
+  return {
+    id: row.id,
+    ref: row.ref,
+    propertyId: row.property_id,
+    clientId: row.client_id,
+    agentId: row.agent_id,
+    type: row.type,
+    amount: row.amount,
+    commission: row.commission,
+    stage: row.stage,
+    notes: row.notes || undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 function documentToJSON(row) {
   return {
     id: row.id,
@@ -141,4 +158,4 @@ function documentToJSON(row) {
   };
 }
 
-module.exports = { userToAgent, userToAuth, clientToJSON, callToJSON, visitToJSON, crToJSON, propertyToJSON, documentToJSON };
+module.exports = { userToAgent, userToAuth, clientToJSON, callToJSON, visitToJSON, crToJSON, propertyToJSON, documentToJSON, transactionToJSON };

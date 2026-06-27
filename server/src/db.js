@@ -96,6 +96,21 @@ db.exec(`
     created_at   TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS transactions (
+    id          TEXT PRIMARY KEY,
+    ref         TEXT,
+    property_id TEXT,
+    client_id   TEXT,
+    agent_id    TEXT,
+    type        TEXT NOT NULL DEFAULT 'vente_residentielle',
+    amount      INTEGER NOT NULL DEFAULT 0,
+    commission  INTEGER NOT NULL DEFAULT 0,
+    stage       TEXT NOT NULL DEFAULT 'prospection',
+    notes       TEXT,
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS documents (
     id          TEXT PRIMARY KEY,
     type        TEXT NOT NULL DEFAULT 'autre',
