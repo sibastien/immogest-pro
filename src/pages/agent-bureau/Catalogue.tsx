@@ -130,10 +130,16 @@ export const AgentBureauCatalogue: React.FC = () => {
               </div>
             </div>
 
-            {/* Photo placeholder */}
-            <div className="h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl mb-4 flex items-center justify-center">
-              <span className="text-gray-400 text-xs font-mono">{selectedProp.ref}</span>
-            </div>
+            {/* Photo */}
+            {selectedProp.photos && selectedProp.photos.length > 0 ? (
+              <div className="h-32 rounded-xl mb-4 overflow-hidden bg-gray-100">
+                <img src={selectedProp.photos[0]} alt={selectedProp.title} className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl mb-4 flex items-center justify-center">
+                <span className="text-gray-400 text-xs font-mono">{selectedProp.ref}</span>
+              </div>
+            )}
 
             {/* Stats grid */}
             <div className="grid grid-cols-3 gap-2 mb-4">

@@ -20,11 +20,6 @@ const STATUS_OPTIONS: { value: PropertyStatus; label: string }[] = [
   { value: 'vendu', label: 'Vendu' },
 ];
 
-const LOCATIONS = [
-  'La Marsa', 'Gammarth', 'La Soukra', 'Ennasr', 'Menzah',
-  'Ain Zaghouan', 'Centre-ville', 'Les Berges du Lac', 'Ariana',
-];
-
 const COMMON_FEATURES = [
   'Parking', 'Ascenseur', 'Piscine', 'Jardin', 'Terrasse', 'Balcon',
   'Climatisation', 'Meublé', 'Gardien', 'Concierge', 'Cave', 'Buanderie',
@@ -338,14 +333,13 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
         <legend className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Localisation</legend>
         <div className="grid grid-cols-2 gap-3">
           <FormField label="Quartier / Ville *" error={errors.location}>
-            <select
+            <input
+              type="text"
               value={form.location}
               onChange={(e) => set('location', e.target.value)}
+              placeholder="Ex: La Marsa, Sousse, Centre-ville…"
               className={inputClass(!!errors.location)}
-            >
-              <option value="">— Choisir —</option>
-              {LOCATIONS.map((l) => <option key={l} value={l}>{l}</option>)}
-            </select>
+            />
           </FormField>
           <FormField label="Adresse complète *" error={errors.address}>
             <input

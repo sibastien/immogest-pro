@@ -137,22 +137,36 @@ export const PropertyDetail: React.FC = () => {
       <div className="grid grid-cols-3 gap-5">
         {/* Left col — photos + details */}
         <div className="col-span-2 space-y-5">
-          {/* Photo gallery placeholder */}
-          <div className="grid grid-cols-3 gap-2 h-56">
-            <div className="col-span-2 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
-              <div className="text-center text-gray-300">
-                <Building2 size={40} className="mx-auto mb-2" />
-                <div className="text-sm">Photo principale</div>
+          {/* Photo gallery */}
+          {property.photos && property.photos.length > 0 ? (
+            <div className="grid grid-cols-3 gap-2 h-56">
+              <a
+                href={property.photos[0]}
+                target="_blank"
+                rel="noreferrer"
+                className="col-span-2 rounded-xl overflow-hidden bg-gray-100 block"
+              >
+                <img src={property.photos[0]} alt={property.title} className="w-full h-full object-cover" />
+              </a>
+              <div className="flex flex-col gap-2">
+                {property.photos.slice(1, 4).map((url, i) => (
+                  <a key={url} href={url} target="_blank" rel="noreferrer" className="flex-1 rounded-xl overflow-hidden bg-gray-100 block">
+                    <img src={url} alt={`${property.title} ${i + 2}`} className="w-full h-full object-cover" />
+                  </a>
+                ))}
+                {Array.from({ length: Math.max(0, 3 - (property.photos.length - 1)) }).map((_, i) => (
+                  <div key={`ph-${i}`} className="flex-1 bg-gray-100 rounded-xl" />
+                ))}
               </div>
             </div>
-            <div className="flex flex-col gap-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex-1 bg-gray-100 rounded-xl flex items-center justify-center text-gray-300 text-xs">
-                  Photo {i + 1}
-                </div>
-              ))}
+          ) : (
+            <div className="h-56 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
+              <div className="text-center text-gray-300">
+                <Building2 size={40} className="mx-auto mb-2" />
+                <div className="text-sm">Aucune photo</div>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Description */}
           {property.description && (
