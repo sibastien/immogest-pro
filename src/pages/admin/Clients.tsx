@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, UserPlus, Phone, Mail, X, ChevronRight, AlertTriangle, Users } from 'lucide-react';
+import { Search, UserPlus, Phone, Mail, X, ChevronRight, AlertTriangle, Users, Trash2 } from 'lucide-react';
 import { useClientsStore } from '../../store/clientsStore';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
@@ -32,8 +32,15 @@ const STATUS_BADGE: Record<Client['status'], 'actif' | 'a_relancer' | 'compromis
 
 export const AdminClients: React.FC = () => {
   const navigate = useNavigate();
-  const { clients }  = useClientsStore();
+  const { clients, deleteClient }  = useClientsStore();
   const { agents }   = useAgentsStore();
+
+  const handleDelete = (e: React.MouseEvent, client: Client) => {
+    e.stopPropagation();
+    if (window.confirm(`Supprimer définitivement « ${client.name} » ?\nCette action est irréversible.`)) {
+      deleteClient(client.id);
+    }
+  };
   const [search, setSearch]   = useState('');
   const [statusFilter, setStatusFilter] = useState<Client['status'] | ''>('');
   const [typeFilter,   setTypeFilter]   = useState<Client['type']   | ''>('');
@@ -174,6 +181,13 @@ export const AdminClients: React.FC = () => {
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-xs text-gray-300 hidden lg:block">{SOURCE_LABELS[client.source]}</span>
                       <Badge variant={STATUS_BADGE[client.status]} size="sm" />
+                      <button
+                        onClick={(e) => handleDelete(e, client)}
+                        title="Supprimer ce contact"
+                        className="p-1 text-gray-300 hover:text-danger transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                       <ChevronRight size={13} className={isSelected ? 'text-primary' : 'text-gray-300'} />
                     </div>
                   </div>

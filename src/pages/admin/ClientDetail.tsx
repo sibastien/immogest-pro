@@ -73,7 +73,7 @@ type TabId = 'historique' | 'biens' | 'notes';
 export const ClientDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { clients, updateClient } = useClientsStore();
+  const { clients, updateClient, deleteClient } = useClientsStore();
   const { agents, visits } = useAgentsStore();
   const { properties } = usePropertiesStore();
 
@@ -163,7 +163,15 @@ export const ClientDetail: React.FC = () => {
             >
               <Edit2 size={13} /> Modifier
             </button>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 border border-danger/30 rounded-lg text-xs text-danger hover:bg-danger-light transition-colors">
+            <button
+              onClick={() => {
+                if (window.confirm(`Supprimer définitivement « ${client.name} » ?\nCette action est irréversible.`)) {
+                  deleteClient(client.id);
+                  navigate('/admin/clients');
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-danger/30 rounded-lg text-xs text-danger hover:bg-danger-light transition-colors"
+            >
               <Trash2 size={13} /> Supprimer
             </button>
           </div>

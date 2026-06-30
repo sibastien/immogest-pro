@@ -1,6 +1,6 @@
 const express = require('express');
 const db = require('../db');
-const { protect } = require('../middleware/auth');
+const { protect, requireRole } = require('../middleware/auth');
 const { clientToJSON } = require('../mappers');
 
 const router = express.Router();
@@ -77,6 +77,14 @@ router.put('/:id', (req, res) => {
   `).run({ id: req.params.id, ...data });
 
   res.json(clientToJSON(db.prepare('SELECT * FROM clients WHERE id = ?').get(req.params.id)));
+});
+
+// DELETE /api/clients/:id — remove a contact. Managers only (admin / coordinatrice).
+router.delete('/:id', requireRole('admin', 'coordinatrice'), (req, res) => {
+  const existing = db.prepare('SELECT id FROM clients WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'Client introuvable.' });
+  db.prepare('DELETE FROM clients WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
 });
 
 module.exports = router;

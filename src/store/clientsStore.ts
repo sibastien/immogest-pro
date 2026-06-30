@@ -20,6 +20,7 @@ interface ClientsState {
   selectClient: (id: string | null) => void;
   addClient: (client: Client) => void;
   updateClient: (id: string, updates: Partial<Client>) => void;
+  deleteClient: (id: string) => void;
   getFilteredClients: () => Client[];
   getClientById: (id: string) => Client | undefined;
 }
@@ -64,6 +65,16 @@ export const useClientsStore = create<ClientsState>((set, get) => ({
       clients: state.clients.map((c) => (c.id === id ? { ...c, ...updates } : c)),
     }));
     api.put<Client>(`/clients/${id}`, updates).catch(() => get().load());
+  },
+
+  // Optimistic: drop it from the cache, then persist. Reload on failure so a
+  // rejected delete (e.g. insufficient role) restores the contact.
+  deleteClient: (id) => {
+    set((state) => ({
+      clients: state.clients.filter((c) => c.id !== id),
+      selectedClient: state.selectedClient?.id === id ? null : state.selectedClient,
+    }));
+    api.del(`/clients/${id}`).catch(() => get().load());
   },
 
   getFilteredClients: () => {
