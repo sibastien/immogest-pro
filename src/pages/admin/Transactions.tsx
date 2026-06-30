@@ -33,6 +33,7 @@ const TYPE_LABEL: Record<string, string> = {
   appartement: 'Appartement',
   maison:      'Maison',
   commercial:  'Local commercial',
+  terrain:     'Terrain',
 };
 
 export const AdminTransactions: React.FC = () => {

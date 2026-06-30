@@ -16,6 +16,7 @@ const TYPE_OPTIONS: { value: PropertyType; label: string }[] = [
   { value: 'appartement', label: 'Appartement' },
   { value: 'maison', label: 'Maison' },
   { value: 'commercial', label: 'Local commercial' },
+  { value: 'terrain', label: 'Terrain' },
 ];
 
 const STATUS_OPTIONS: { value: PropertyStatus; label: string }[] = [

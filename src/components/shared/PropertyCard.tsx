@@ -8,6 +8,7 @@ const TYPE_LABELS: Record<PropertyType, string> = {
   appartement: 'Appartement',
   maison: 'Maison',
   commercial: 'Local commercial',
+  terrain: 'Terrain',
 };
 
 function formatPrice(price: number, priceType: 'vente' | 'mois'): string {

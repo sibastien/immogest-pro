@@ -90,6 +90,7 @@ export const AdminDashboard: React.FC = () => {
     { label: 'Appartement',      value: properties.filter((p) => p.type === 'appartement').length, color: '#534AB7' },
     { label: 'Maison',           value: properties.filter((p) => p.type === 'maison').length, color: '#3B6D11' },
     { label: 'Local commercial', value: properties.filter((p) => p.type === 'commercial').length, color: '#854F0B' },
+    { label: 'Terrain',          value: properties.filter((p) => p.type === 'terrain').length, color: '#0F766E' },
   ];
 
   // Pipeline stages derived from transactions

@@ -33,10 +33,11 @@ const PROPERTY_TYPE_OPTIONS: { value: PropertyType; label: string }[] = [
   { value: 'appartement', label: 'Appartement' },
   { value: 'maison', label: 'Maison' },
   { value: 'commercial', label: 'Local commercial' },
+  { value: 'terrain', label: 'Terrain' },
 ];
 
-const LOCATIONS = ['La Marsa', 'Gammarth', 'La Soukra', 'Ennasr', 'Menzah',
-  'Ain Zaghouan', 'Centre-ville', 'Les Berges du Lac', 'Ariana'];
+const LOCATIONS = ['Hammamet Sud', 'Hammamet Nord', 'Hammamet Yasmine',
+  'AFH', 'Nabeul', 'Mrezga'];
 
 type FormData = Omit<Client, 'id' | 'createdAt'>;
 

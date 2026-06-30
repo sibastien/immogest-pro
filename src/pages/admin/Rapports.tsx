@@ -15,12 +15,14 @@ const TYPE_COLORS: Record<PropertyType, string> = {
   appartement: '#534AB7',
   maison:      '#3B6D11',
   commercial:  '#854F0B',
+  terrain:     '#0F766E',
 };
 const TYPE_LABELS: Record<PropertyType, string> = {
   villa:       'Villa',
   appartement: 'Appartement',
   maison:      'Maison',
   commercial:  'Local commercial',
+  terrain:     'Terrain',
 };
 
 export const AdminRapports: React.FC = () => {

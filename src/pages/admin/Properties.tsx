@@ -18,6 +18,7 @@ const TYPE_LABELS: Record<PropertyType, string> = {
   appartement: 'Appartement',
   maison: 'Maison',
   commercial: 'Local commercial',
+  terrain: 'Terrain',
 };
 
 const STATUS_LABELS: Record<PropertyStatus, string> = {
