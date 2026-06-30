@@ -5,6 +5,7 @@ import {
 import { useAgentsStore } from '../../store/agentsStore';
 import { useAuthStore } from '../../store/authStore';
 import { usePropertiesStore } from '../../store/propertiesStore';
+import { PhoneReveal } from '../../components/shared/PhoneReveal';
 
 type RdvStatus = 'planifie' | 'confirme' | 'effectue' | 'annule';
 
@@ -76,9 +77,9 @@ export const ClientRendezVous: React.FC = () => {
                     <div className="text-xs opacity-70">Votre agent</div>
                   </div>
                 </div>
-                <a href={`tel:${agent.phone}`} className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg text-sm transition-colors">
+                <PhoneReveal phone={agent.phone} name={agent.name} className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg text-sm transition-colors">
                   <Phone size={13} /> Appeler
-                </a>
+                </PhoneReveal>
               </div>
             )}
           </div>
@@ -161,9 +162,9 @@ export const ClientRendezVous: React.FC = () => {
                   </div>
                   {visit.status !== 'annule' && visit.status !== 'effectue' && (
                     <div className="flex items-center gap-1.5">
-                      <a href={`tel:${agent.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs rounded-lg hover:bg-primary/90 transition-colors">
+                      <PhoneReveal phone={agent.phone} name={agent.name} className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs rounded-lg hover:bg-primary/90 transition-colors">
                         <Phone size={12} /> Contacter
-                      </a>
+                      </PhoneReveal>
                     </div>
                   )}
                   {visit.status === 'effectue' && (

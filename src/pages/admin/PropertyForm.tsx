@@ -4,13 +4,18 @@ import { usePropertiesStore } from '../../store/propertiesStore';
 import { useAgentsStore } from '../../store/agentsStore';
 import { useAuthStore } from '../../store/authStore';
 import { api } from '../../lib/api';
-import type { Property, PropertyType, PropertyStatus } from '../../types';
+import type { Property, PropertyType, PropertyStatus, TransactionType } from '../../types';
+
+const TRANSACTION_OPTIONS: { value: TransactionType; label: string }[] = [
+  { value: 'vente', label: 'Vente' },
+  { value: 'location', label: 'Location' },
+];
 
 const TYPE_OPTIONS: { value: PropertyType; label: string }[] = [
-  { value: 'vente_residentielle', label: 'Vente résidentielle' },
-  { value: 'location_residentielle', label: 'Location résidentielle' },
+  { value: 'villa', label: 'Villa' },
+  { value: 'appartement', label: 'Appartement' },
+  { value: 'maison', label: 'Maison' },
   { value: 'commercial', label: 'Local commercial' },
-  { value: 'terrain', label: 'Terrain / Foncier' },
 ];
 
 const STATUS_OPTIONS: { value: PropertyStatus; label: string }[] = [
@@ -28,8 +33,8 @@ const COMMON_FEATURES = [
 
 type FormData = Omit<Property, 'id'> & { featureInput: string };
 
-function generateRef(type: PropertyType): string {
-  const prefix = { vente_residentielle: 'V', location_residentielle: 'L', commercial: 'C', terrain: 'T' }[type];
+function generateRef(transaction: TransactionType): string {
+  const prefix = transaction === 'location' ? 'L' : 'V';
   const code = Math.random().toString(36).slice(2, 5).toUpperCase();
   return `${prefix}-${code}-${String(Date.now()).slice(-3)}`;
 }
@@ -57,7 +62,8 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
   const [form, setForm] = useState<FormData>({
     ref:         property?.ref         ?? '',
     title:       property?.title       ?? '',
-    type:        property?.type        ?? 'vente_residentielle',
+    transaction: property?.transaction ?? 'vente',
+    type:        property?.type        ?? 'villa',
     status:      property?.status      ?? 'disponible',
     price:       property?.price       ?? 0,
     priceType:   property?.priceType   ?? 'vente',
@@ -80,13 +86,13 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
 
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
-  // Sync priceType with type
+  // Sync priceType with the transaction (rental is priced per month).
   useEffect(() => {
     setForm((f) => ({
       ...f,
-      priceType: f.type === 'location_residentielle' ? 'mois' : 'vente',
+      priceType: f.transaction === 'location' ? 'mois' : 'vente',
     }));
-  }, [form.type]);
+  }, [form.transaction]);
 
   const set = <K extends keyof FormData>(key: K, value: FormData[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -146,7 +152,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
     if (!validate()) return;
 
     const { featureInput, ...rest } = form;
-    const ref = form.ref || generateRef(form.type);
+    const ref = form.ref || generateRef(form.transaction);
 
     if (isEdit && property) {
       updateProperty(property.id, { ...rest, ref });
@@ -163,7 +169,19 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
       {/* Type & Statut */}
       <fieldset className="space-y-4">
         <legend className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Classification</legend>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
+          <FormField label="Transaction" error={errors.transaction}>
+            <select
+              value={form.transaction}
+              onChange={(e) => set('transaction', e.target.value as TransactionType)}
+              className={inputClass()}
+            >
+              {TRANSACTION_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </FormField>
+
           <FormField label="Type de bien" error={errors.type}>
             <select
               value={form.type}
@@ -208,7 +226,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
               type="text"
               value={form.ref}
               onChange={(e) => set('ref', e.target.value)}
-              placeholder={generateRef(form.type)}
+              placeholder={generateRef(form.transaction)}
               className={inputClass()}
             />
           </FormField>

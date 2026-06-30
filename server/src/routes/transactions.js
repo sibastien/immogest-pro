@@ -23,15 +23,16 @@ router.post('/', (req, res) => {
   const ref = b.ref || `TX-${String(Date.now()).slice(-5)}`;
 
   db.prepare(`
-    INSERT INTO transactions (id, ref, property_id, client_id, agent_id, type, amount, commission, stage, notes, created_at, updated_at)
-    VALUES (@id, @ref, @property_id, @client_id, @agent_id, @type, @amount, @commission, @stage, @notes, @created_at, @updated_at)
+    INSERT INTO transactions (id, ref, property_id, client_id, agent_id, deal_type, type, amount, commission, stage, notes, created_at, updated_at)
+    VALUES (@id, @ref, @property_id, @client_id, @agent_id, @deal_type, @type, @amount, @commission, @stage, @notes, @created_at, @updated_at)
   `).run({
     id,
     ref,
     property_id: b.propertyId,
     client_id: b.clientId,
     agent_id: b.agentId || req.user.id,
-    type: b.type || 'vente_residentielle',
+    deal_type: b.transaction || 'vente',
+    type: b.type || 'villa',
     amount: b.amount ?? 0,
     commission: b.commission ?? 0,
     stage: b.stage || 'prospection',
@@ -71,7 +72,7 @@ router.post('/:id/close', (req, res) => {
   if (!tx) return res.status(404).json({ error: 'Transaction introuvable.' });
 
   const now = new Date().toISOString();
-  const isRental = tx.type === 'location_residentielle';
+  const isRental = tx.deal_type === 'location';
   const propertyStatus = isRental ? 'loue' : 'vendu';
 
   const close = db.transaction(() => {

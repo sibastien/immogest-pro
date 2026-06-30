@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserPlus, Phone, CalendarPlus, Search, Users } from 'lucide-react';
 import { Badge } from '../../components/ui/Badge';
+import { PhoneReveal } from '../../components/shared/PhoneReveal';
 import { useClientsStore } from '../../store/clientsStore';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -69,12 +70,13 @@ export const AgentTerrainClients: React.FC = () => {
               <Badge variant={STATUS_BADGE[client.status]} size="sm" label={TYPE_LABELS[client.type] ?? client.type} />
             </div>
             <div className="flex gap-2">
-              <button
-                onClick={() => navigate(`/agent-terrain/appels?client=${client.id}`)}
+              <PhoneReveal
+                phone={client.phone}
+                name={client.name}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-gray-200 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-50"
               >
                 <Phone size={13} /> Appeler
-              </button>
+              </PhoneReveal>
               <button
                 onClick={() => navigate(`/agent-terrain/planifier?client=${client.id}`)}
                 className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-gray-200 text-gray-700 rounded-lg text-xs font-medium hover:bg-gray-50"

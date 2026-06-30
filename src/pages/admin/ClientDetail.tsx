@@ -13,6 +13,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { Card } from '../../components/ui/Card';
 import { Drawer } from '../../components/ui/Drawer';
+import { PhoneReveal } from '../../components/shared/PhoneReveal';
 import { ClientForm } from './ClientForm';
 import type { Client, Visit } from '../../types';
 
@@ -25,6 +26,7 @@ const TYPE_LABELS: Record<Client['type'], string> = {
 const SOURCE_LABELS: Record<Client['source'], string> = {
   appel: 'Appel entrant', web: 'Site web', email: 'Email',
   passage: 'Passage agence', recommandation: 'Recommandation',
+  facebook: 'Facebook', instagram: 'Instagram', tiktok: 'TikTok', mubawab: 'Mubawab',
 };
 
 const STATUS_BADGE: Record<Client['status'], 'actif' | 'a_relancer' | 'compromis' | 'cloture'> = {
@@ -173,12 +175,13 @@ export const ClientDetail: React.FC = () => {
           <div className="col-span-2 space-y-5">
             {/* Quick contact bar */}
             <div className="flex items-center gap-3">
-              <a
-                href={`tel:${client.phone}`}
+              <PhoneReveal
+                phone={client.phone}
+                name={client.name}
                 className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
               >
                 <Phone size={15} /> {client.phone}
-              </a>
+              </PhoneReveal>
               {client.email && (
                 <a
                   href={`mailto:${client.email}`}

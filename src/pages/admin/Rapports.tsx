@@ -11,16 +11,16 @@ import type { PropertyType } from '../../types';
 const MONTHS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 const TYPE_COLORS: Record<PropertyType, string> = {
-  vente_residentielle:    '#185FA5',
-  location_residentielle: '#534AB7',
-  commercial:             '#3B6D11',
-  terrain:                '#854F0B',
+  villa:       '#185FA5',
+  appartement: '#534AB7',
+  maison:      '#3B6D11',
+  commercial:  '#854F0B',
 };
 const TYPE_LABELS: Record<PropertyType, string> = {
-  vente_residentielle:    'Vente résidentielle',
-  location_residentielle: 'Location',
-  commercial:             'Commercial',
-  terrain:                'Terrain',
+  villa:       'Villa',
+  appartement: 'Appartement',
+  maison:      'Maison',
+  commercial:  'Local commercial',
 };
 
 export const AdminRapports: React.FC = () => {

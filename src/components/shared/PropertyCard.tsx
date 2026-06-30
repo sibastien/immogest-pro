@@ -4,10 +4,10 @@ import type { Property, PropertyType } from '../../types';
 import { Badge } from '../ui/Badge';
 
 const TYPE_LABELS: Record<PropertyType, string> = {
-  vente_residentielle: 'Vente',
-  location_residentielle: 'Location',
-  commercial: 'Commercial',
-  terrain: 'Terrain',
+  villa: 'Villa',
+  appartement: 'Appartement',
+  maison: 'Maison',
+  commercial: 'Local commercial',
 };
 
 function formatPrice(price: number, priceType: 'vente' | 'mois'): string {
@@ -45,7 +45,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick })
           />
         </div>
         <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded text-xs font-medium text-gray-600">
-          {TYPE_LABELS[property.type]}
+          {property.transaction === 'location' ? 'Location' : 'Vente'} · {TYPE_LABELS[property.type] ?? 'Autre'}
         </div>
       </div>
 

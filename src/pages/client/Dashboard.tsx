@@ -3,6 +3,7 @@ import { FolderOpen, CalendarDays, Building2, Phone } from 'lucide-react';
 import { Card, CardHeader } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { StatCard } from '../../components/ui/StatCard';
+import { PhoneReveal } from '../../components/shared/PhoneReveal';
 import { useAuthStore } from '../../store/authStore';
 import { useAgentsStore } from '../../store/agentsStore';
 import { mockAgents } from '../../data/mockAgents';
@@ -96,13 +97,14 @@ export const ClientDashboard: React.FC = () => {
                 <div className="text-xs text-gray-400">Agent immobilier</div>
               </div>
             </div>
-            <a
-              href={`tel:${myAgent.phone}`}
+            <PhoneReveal
+              phone={myAgent.phone}
+              name={myAgent.name}
               className="flex items-center justify-center gap-2 w-full py-2.5 border border-primary text-primary text-sm font-medium rounded-lg hover:bg-primary-light transition-colors"
             >
               <Phone size={16} />
               {myAgent.phone}
-            </a>
+            </PhoneReveal>
           </Card>
         )}
       </div>

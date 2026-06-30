@@ -6,6 +6,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { Card } from '../../components/ui/Card';
 import { Drawer } from '../../components/ui/Drawer';
+import { PhoneReveal } from '../../components/shared/PhoneReveal';
 import { ClientForm } from './ClientForm';
 import { useAgentsStore } from '../../store/agentsStore';
 import type { Client } from '../../types';
@@ -19,6 +20,7 @@ const TYPE_LABELS: Record<Client['type'], string> = {
 const SOURCE_LABELS: Record<Client['source'], string> = {
   appel: 'Appel', web: 'Web', email: 'Email',
   passage: 'Passage', recommandation: 'Recommandation',
+  facebook: 'Facebook', instagram: 'Instagram', tiktok: 'TikTok', mubawab: 'Mubawab',
 };
 
 const STATUS_BADGE: Record<Client['status'], 'actif' | 'a_relancer' | 'compromis' | 'cloture'> = {
@@ -208,7 +210,7 @@ export const AdminClients: React.FC = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex items-center gap-2 text-gray-600">
                   <Phone size={14} className="flex-shrink-0 text-gray-400" />
-                  <a href={`tel:${selected.phone}`} className="hover:text-primary">{selected.phone}</a>
+                  <span className="select-all">{selected.phone}</span>
                 </div>
                 {selected.email && (
                   <div className="flex items-center gap-2 text-gray-600">
@@ -260,10 +262,14 @@ export const AdminClients: React.FC = () => {
               </div>
 
               <div className="mt-4 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2">
-                <button className="flex items-center justify-center gap-1.5 py-2 border border-gray-200 rounded-lg text-xs text-gray-600 hover:bg-gray-50 transition-colors">
+                <PhoneReveal
+                  phone={selected.phone}
+                  name={selected.name}
+                  className="flex items-center justify-center gap-1.5 py-2 border border-gray-200 rounded-lg text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                >
                   <Phone size={13} />
                   Appeler
-                </button>
+                </PhoneReveal>
                 <button className="flex items-center justify-center gap-1.5 py-2 bg-primary text-white rounded-lg text-xs font-medium hover:bg-primary/90 transition-colors">
                   <Mail size={13} />
                   Envoyer email

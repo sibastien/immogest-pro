@@ -19,10 +19,10 @@ const STAGES: { id: Stage; label: string; color: string; headerBg: string }[] = 
 ];
 
 const TYPE_LABEL: Record<string, string> = {
-  vente_residentielle:   'Vente',
-  location_residentielle: 'Location',
-  commercial:             'Commercial',
-  terrain:                'Terrain',
+  villa:       'Villa',
+  appartement: 'Appartement',
+  maison:      'Maison',
+  commercial:  'Local commercial',
 };
 
 export const AdminPipeline: React.FC = () => {
@@ -46,7 +46,7 @@ export const AdminPipeline: React.FC = () => {
     if (tx && tx.stage !== stage) {
       if (stage === 'cloture') {
         // Reaching Clôture marks the bien sold/rented + client clôturé.
-        const isRental = tx.type === 'location_residentielle';
+        const isRental = tx.transaction === 'location';
         const prop = properties.find((p) => p.id === tx.propertyId);
         if (window.confirm(`Clôturer cette transaction ?\nLe bien « ${prop?.title ?? ''} » sera marqué comme ${isRental ? 'loué' : 'vendu'} et le client comme clôturé.`)) {
           closeTransaction(tx.id);
@@ -128,7 +128,7 @@ export const AdminPipeline: React.FC = () => {
                       {/* Ref + type */}
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-mono text-gray-400">{tx.ref}</span>
-                        <Badge variant={tx.type === 'vente_residentielle' ? 'disponible' : 'info'} size="sm" label={TYPE_LABEL[tx.type] ?? tx.type} />
+                        <Badge variant={tx.transaction === 'vente' ? 'disponible' : 'info'} size="sm" label={`${tx.transaction === 'location' ? 'Location' : 'Vente'} · ${TYPE_LABEL[tx.type] ?? 'Autre'}`} />
                       </div>
 
                       {/* Property */}

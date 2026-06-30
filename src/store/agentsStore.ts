@@ -156,7 +156,7 @@ export const useAgentsStore = create<AgentsState>((set, get) => ({
       ),
     }));
     if (tx) {
-      const isRental = tx.type === 'location_residentielle';
+      const isRental = tx.transaction === 'location';
       if (tx.propertyId) {
         usePropertiesStore.getState().updateProperty(tx.propertyId, { status: isRental ? 'loue' : 'vendu' });
       }

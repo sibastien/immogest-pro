@@ -1,12 +1,14 @@
 export type Role = 'admin' | 'coordinatrice' | 'agent_bureau' | 'agent_terrain' | 'client';
 
-export type PropertyType = 'vente_residentielle' | 'location_residentielle' | 'commercial' | 'terrain';
+export type PropertyType = 'villa' | 'appartement' | 'maison' | 'commercial';
+export type TransactionType = 'vente' | 'location';
 export type PropertyStatus = 'disponible' | 'sous_compromis' | 'loue' | 'vendu';
 
 export interface Property {
   id: string;
   ref: string;
   title: string;
+  transaction: TransactionType;
   type: PropertyType;
   status: PropertyStatus;
   price: number;
@@ -38,7 +40,7 @@ export interface Client {
   agentId: string;
   status: 'actif' | 'a_relancer' | 'compromis' | 'cloture';
   lastContact: string;
-  source: 'appel' | 'web' | 'email' | 'passage' | 'recommandation';
+  source: 'appel' | 'web' | 'email' | 'passage' | 'recommandation' | 'facebook' | 'instagram' | 'tiktok' | 'mubawab';
   notes?: string;
   createdAt: string;
   propertyPreferences?: {
@@ -114,6 +116,7 @@ export interface Transaction {
   propertyId: string;
   clientId: string;
   agentId: string;
+  transaction: TransactionType;
   type: PropertyType;
   amount: number;
   commission: number;

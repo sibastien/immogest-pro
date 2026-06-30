@@ -10,7 +10,8 @@ function rowFromBody(b) {
   return {
     ref: b.ref || null,
     title: String(b.title || '').trim(),
-    type: b.type || 'vente_residentielle',
+    deal_type: b.transaction || 'vente',
+    type: b.type || 'villa',
     status: b.status || 'disponible',
     price: b.price ?? 0,
     price_type: b.priceType || 'vente',
@@ -30,7 +31,7 @@ function rowFromBody(b) {
   };
 }
 
-const COLS = `ref, title, type, status, price, price_type, surface, rooms, bathrooms,
+const COLS = `ref, title, deal_type, type, status, price, price_type, surface, rooms, bathrooms,
   location, address, agent_id, photos, description, features, floor, total_floors, parking, furnished`;
 
 // GET /api/properties — shared catalogue, visible to every authenticated user.
@@ -53,7 +54,7 @@ router.post('/', (req, res) => {
 
   db.prepare(`
     INSERT INTO properties (id, ${COLS}, created_at)
-    VALUES (@id, @ref, @title, @type, @status, @price, @price_type, @surface, @rooms, @bathrooms,
+    VALUES (@id, @ref, @title, @deal_type, @type, @status, @price, @price_type, @surface, @rooms, @bathrooms,
       @location, @address, @agent_id, @photos, @description, @features, @floor, @total_floors,
       @parking, @furnished, @created_at)
   `).run({ id, ...data, created_at: req.body.createdAt || new Date().toISOString().split('T')[0] });
@@ -68,7 +69,7 @@ router.put('/:id', (req, res) => {
   const data = rowFromBody({ ...propertyToJSON(existing), ...req.body });
 
   db.prepare(`
-    UPDATE properties SET ref=@ref, title=@title, type=@type, status=@status, price=@price,
+    UPDATE properties SET ref=@ref, title=@title, deal_type=@deal_type, type=@type, status=@status, price=@price,
       price_type=@price_type, surface=@surface, rooms=@rooms, bathrooms=@bathrooms, location=@location,
       address=@address, agent_id=@agent_id, photos=@photos, description=@description, features=@features,
       floor=@floor, total_floors=@total_floors, parking=@parking, furnished=@furnished

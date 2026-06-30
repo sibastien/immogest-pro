@@ -23,10 +23,10 @@ const STAGE_CONFIG: Record<Stage, { label: string; color: string; bg: string; va
 };
 
 const TYPE_LABEL: Record<string, string> = {
-  vente_residentielle:    'Vente résidentielle',
-  location_residentielle: 'Location',
-  commercial:             'Commercial',
-  terrain:                'Terrain',
+  villa:       'Villa',
+  appartement: 'Appartement',
+  maison:      'Maison',
+  commercial:  'Local commercial',
 };
 
 export const CoordinatriceDossiers: React.FC = () => {
@@ -158,7 +158,7 @@ export const CoordinatriceDossiers: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
                     <span className="flex items-center gap-1"><User size={10} /> {client?.name ?? '—'}</span>
-                    <span>{TYPE_LABEL[tx.type] ?? tx.type}</span>
+                    <span>{tx.transaction === 'location' ? 'Location' : 'Vente'} · {TYPE_LABEL[tx.type] ?? 'Autre'}</span>
                   </div>
                 </div>
 

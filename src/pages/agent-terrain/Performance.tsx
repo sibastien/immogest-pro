@@ -201,7 +201,7 @@ export const AgentTerrainPerformance: React.FC = () => {
                 <div key={tx.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
                   <div>
                     <div className="text-xs font-medium text-gray-800">
-                      {tx.type === 'vente_residentielle' ? 'Vente rés.' : tx.type === 'location_residentielle' ? 'Location' : tx.type === 'commercial' ? 'Commercial' : 'Terrain'}
+                      {tx.transaction === 'location' ? 'Location' : 'Vente'}
                     </div>
                     <div className="text-xs text-gray-400">
                       {new Date(tx.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}

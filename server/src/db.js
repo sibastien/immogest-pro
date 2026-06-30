@@ -76,7 +76,8 @@ db.exec(`
     id           TEXT PRIMARY KEY,
     ref          TEXT,
     title        TEXT NOT NULL,
-    type         TEXT NOT NULL DEFAULT 'vente_residentielle',
+    deal_type    TEXT NOT NULL DEFAULT 'vente',
+    type         TEXT NOT NULL DEFAULT 'villa',
     status       TEXT NOT NULL DEFAULT 'disponible',
     price        INTEGER NOT NULL DEFAULT 0,
     price_type   TEXT NOT NULL DEFAULT 'vente',
@@ -102,7 +103,8 @@ db.exec(`
     property_id TEXT,
     client_id   TEXT,
     agent_id    TEXT,
-    type        TEXT NOT NULL DEFAULT 'vente_residentielle',
+    deal_type   TEXT NOT NULL DEFAULT 'vente',
+    type        TEXT NOT NULL DEFAULT 'villa',
     amount      INTEGER NOT NULL DEFAULT 0,
     commission  INTEGER NOT NULL DEFAULT 0,
     stage       TEXT NOT NULL DEFAULT 'prospection',
@@ -140,5 +142,26 @@ db.exec(`
     created_at      TEXT NOT NULL
   );
 `);
+
+// Migrations for databases created before a column existed. ALTER ADD COLUMN is
+// a no-op once the column is present, so this stays safe on every boot.
+function ensureColumn(table, column, ddl) {
+  const exists = db.prepare(`PRAGMA table_info(${table})`).all().some((c) => c.name === column);
+  if (!exists) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+    return true;
+  }
+  return false;
+}
+
+// `deal_type` (vente / location) split out from the old `type` enum. For existing
+// rows we infer it: rentals were priced per month (properties) or tagged
+// 'location_residentielle' (transactions).
+if (ensureColumn('properties', 'deal_type', "deal_type TEXT NOT NULL DEFAULT 'vente'")) {
+  db.prepare("UPDATE properties SET deal_type = 'location' WHERE price_type = 'mois'").run();
+}
+if (ensureColumn('transactions', 'deal_type', "deal_type TEXT NOT NULL DEFAULT 'vente'")) {
+  db.prepare("UPDATE transactions SET deal_type = 'location' WHERE type = 'location_residentielle'").run();
+}
 
 module.exports = db;

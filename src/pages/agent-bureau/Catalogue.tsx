@@ -5,10 +5,10 @@ import { Badge } from '../../components/ui/Badge';
 import type { PropertyType } from '../../types';
 
 const TYPE_LABELS: Record<PropertyType, string> = {
-  vente_residentielle:    'Vente',
-  location_residentielle: 'Location',
-  commercial:             'Commercial',
-  terrain:                'Terrain',
+  villa:       'Villa',
+  appartement: 'Appartement',
+  maison:      'Maison',
+  commercial:  'Local commercial',
 };
 
 const STATUS_VARIANT = {

@@ -8,6 +8,7 @@ import { useAgentsStore } from '../../store/agentsStore';
 import { useClientsStore } from '../../store/clientsStore';
 import { usePropertiesStore } from '../../store/propertiesStore';
 import { Badge } from '../../components/ui/Badge';
+import { PhoneReveal } from '../../components/shared/PhoneReveal';
 
 const STATUS_MAP: Record<string, { label: string; variant: 'info' | 'disponible' | 'gray'; Icon: React.FC<{ size?: number; className?: string }> }> = {
   planifie:  { label: 'Planifiée',  variant: 'info',       Icon: Clock },
@@ -144,12 +145,13 @@ export const VisiteDetail: React.FC = () => {
                   <div className="text-sm font-semibold text-gray-900">{client.name}</div>
                   <div className="text-xs text-gray-400 mt-0.5">{client.phone}</div>
                 </div>
-                <a
-                  href={`tel:${client.phone}`}
+                <PhoneReveal
+                  phone={client.phone}
+                  name={client.name}
                   className="w-9 h-9 bg-success rounded-full flex items-center justify-center flex-shrink-0"
                 >
                   <Phone size={16} className="text-white" />
-                </a>
+                </PhoneReveal>
               </div>
               {client.budget && (
                 <div className="mt-3 px-3 py-2 bg-gray-50 rounded-lg">

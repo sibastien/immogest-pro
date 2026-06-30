@@ -6,6 +6,7 @@ import { useClientsStore } from '../../store/clientsStore';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { Drawer } from '../../components/ui/Drawer';
+import { PhoneReveal } from '../../components/shared/PhoneReveal';
 import type { Appointment } from '../../types';
 
 const DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -188,9 +189,9 @@ export const AdminAgenda: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <User size={11} className="text-gray-400" />
                       <span className="text-xs text-gray-600">{client.name}</span>
-                      <a href={`tel:${client.phone}`} className="ml-auto">
+                      <PhoneReveal phone={client.phone} name={client.name} className="ml-auto">
                         <Phone size={12} className="text-primary" />
-                      </a>
+                      </PhoneReveal>
                     </div>
                   )}
                   {agent && (

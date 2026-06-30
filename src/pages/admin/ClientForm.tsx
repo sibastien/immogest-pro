@@ -15,6 +15,10 @@ const SOURCE_OPTIONS: { value: Client['source']; label: string }[] = [
   { value: 'email', label: 'Email' },
   { value: 'passage', label: 'Passage agence' },
   { value: 'recommandation', label: 'Recommandation' },
+  { value: 'facebook', label: 'Facebook' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'tiktok', label: 'TikTok' },
+  { value: 'mubawab', label: 'Mubawab' },
 ];
 
 const STATUS_OPTIONS: { value: Client['status']; label: string }[] = [
@@ -25,10 +29,10 @@ const STATUS_OPTIONS: { value: Client['status']; label: string }[] = [
 ];
 
 const PROPERTY_TYPE_OPTIONS: { value: PropertyType; label: string }[] = [
-  { value: 'vente_residentielle', label: 'Vente résidentielle' },
-  { value: 'location_residentielle', label: 'Location' },
-  { value: 'commercial', label: 'Commercial' },
-  { value: 'terrain', label: 'Terrain' },
+  { value: 'villa', label: 'Villa' },
+  { value: 'appartement', label: 'Appartement' },
+  { value: 'maison', label: 'Maison' },
+  { value: 'commercial', label: 'Local commercial' },
 ];
 
 const LOCATIONS = ['La Marsa', 'Gammarth', 'La Soukra', 'Ennasr', 'Menzah',

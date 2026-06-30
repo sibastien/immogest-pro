@@ -16,6 +16,10 @@ const SOURCE_LABELS: Record<Client['source'], string> = {
   email: 'Email',
   passage: 'Passage',
   recommandation: 'Reco.',
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  tiktok: 'TikTok',
+  mubawab: 'Mubawab',
 };
 
 interface ClientRowProps {

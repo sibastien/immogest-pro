@@ -29,10 +29,10 @@ const STAGE_VARIANT: Record<Stage, 'gray' | 'info' | 'a_relancer' | 'sous_compro
 };
 
 const TYPE_LABEL: Record<string, string> = {
-  vente_residentielle:    'Vente rés.',
-  location_residentielle: 'Location',
-  commercial:             'Commercial',
-  terrain:                'Terrain',
+  villa:       'Villa',
+  appartement: 'Appartement',
+  maison:      'Maison',
+  commercial:  'Local commercial',
 };
 
 export const AdminTransactions: React.FC = () => {
@@ -66,7 +66,8 @@ export const AdminTransactions: React.FC = () => {
       propertyId: form.propertyId,
       clientId: form.clientId,
       agentId: form.agentId || prop?.agentId || (user?.agentId ?? ''),
-      type: prop?.type ?? 'vente_residentielle',
+      transaction: prop?.transaction ?? 'vente',
+      type: prop?.type ?? 'villa',
       amount: Number(form.amount) || (prop?.price ?? 0),
       commission: Number(form.commission) || 0,
       stage: form.stage,
@@ -79,7 +80,7 @@ export const AdminTransactions: React.FC = () => {
 
   const handleClose = (tx: Transaction) => {
     const prop = properties.find((p) => p.id === tx.propertyId);
-    const isRental = tx.type === 'location_residentielle';
+    const isRental = tx.transaction === 'location';
     if (window.confirm(`Clôturer cette transaction ?\nLe bien « ${prop?.title ?? ''} » sera marqué comme ${isRental ? 'loué' : 'vendu'} et le client comme clôturé.`)) {
       closeTransaction(tx.id);
     }
@@ -190,7 +191,7 @@ export const AdminTransactions: React.FC = () => {
                   <td className="px-4 py-3 font-mono text-xs text-gray-400">{tx.ref}</td>
                   <td className="px-4 py-3">
                     <div className="text-xs font-medium text-gray-800 max-w-[160px] truncate">{property?.title ?? '—'}</div>
-                    <div className="text-xs text-gray-400">{TYPE_LABEL[tx.type] ?? tx.type}</div>
+                    <div className="text-xs text-gray-400">{tx.transaction === 'location' ? 'Location' : 'Vente'} · {TYPE_LABEL[tx.type] ?? 'Autre'}</div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="text-xs text-gray-700">{client?.name ?? '—'}</div>
@@ -226,7 +227,7 @@ export const AdminTransactions: React.FC = () => {
                         onClick={() => handleClose(tx)}
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-success/40 text-success rounded-lg text-xs font-medium hover:bg-success-light transition-colors"
                       >
-                        <CheckCircle2 size={12} /> {tx.type === 'location_residentielle' ? 'Marquer loué' : 'Marquer vendu'}
+                        <CheckCircle2 size={12} /> {tx.transaction === 'location' ? 'Marquer loué' : 'Marquer vendu'}
                       </button>
                     )}
                   </td>

@@ -12,14 +12,15 @@ import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { Card } from '../../components/ui/Card';
 import { Drawer } from '../../components/ui/Drawer';
+import { PhoneReveal } from '../../components/shared/PhoneReveal';
 import { PropertyForm } from './PropertyForm';
 import type { PropertyType, PropertyStatus } from '../../types';
 
 const TYPE_LABELS: Record<PropertyType, string> = {
-  vente_residentielle: 'Vente résidentielle',
-  location_residentielle: 'Location résidentielle',
+  villa: 'Villa',
+  appartement: 'Appartement',
+  maison: 'Maison',
   commercial: 'Local commercial',
-  terrain: 'Terrain / Foncier',
 };
 
 const STATUS_BADGE: Record<PropertyStatus, 'disponible' | 'sous_compromis' | 'loue' | 'vendu'> = {
@@ -346,7 +347,7 @@ export const PropertyDetail: React.FC = () => {
               {formatPrice(property.price, property.priceType)}
             </div>
             <div className="text-xs text-gray-400 mb-4">
-              {TYPE_LABELS[property.type]}
+              {property.transaction === 'location' ? 'Location' : 'Vente'} · {TYPE_LABELS[property.type] ?? 'Autre'}
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
@@ -399,12 +400,13 @@ export const PropertyDetail: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <a
-                href={`tel:${agent.phone}`}
+              <PhoneReveal
+                phone={agent.phone}
+                name={agent.name}
                 className="flex items-center justify-center gap-1.5 w-full py-2 border border-gray-200 rounded-lg text-xs text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <Phone size={13} /> {agent.phone}
-              </a>
+              </PhoneReveal>
             </Card>
           )}
 

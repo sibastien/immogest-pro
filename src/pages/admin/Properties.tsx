@@ -14,10 +14,10 @@ import { useAgentsStore } from '../../store/agentsStore';
 import type { PropertyType, PropertyStatus } from '../../types';
 
 const TYPE_LABELS: Record<PropertyType, string> = {
-  vente_residentielle: 'Vente résidentielle',
-  location_residentielle: 'Location',
-  commercial: 'Commercial',
-  terrain: 'Terrain / Foncier',
+  villa: 'Villa',
+  appartement: 'Appartement',
+  maison: 'Maison',
+  commercial: 'Local commercial',
 };
 
 const STATUS_LABELS: Record<PropertyStatus, string> = {
@@ -228,7 +228,7 @@ export const AdminProperties: React.FC = () => {
                           )}
                           <div className="min-w-0">
                             <div className="font-medium text-gray-800 text-xs truncate max-w-[160px]">{p.title}</div>
-                            <div className="text-xs text-gray-400 mt-0.5">{TYPE_LABELS[p.type]}</div>
+                            <div className="text-xs text-gray-400 mt-0.5">{p.transaction === 'location' ? 'Location' : 'Vente'} · {TYPE_LABELS[p.type] ?? 'Autre'}</div>
                           </div>
                         </div>
                       </td>

@@ -86,10 +86,10 @@ export const AdminDashboard: React.FC = () => {
   const hasPortfolio = properties.length > 0;
 
   const donutData = [
-    { label: 'Vente résidentielle', value: properties.filter((p) => p.type === 'vente_residentielle').length, color: '#185FA5' },
-    { label: 'Location',            value: properties.filter((p) => p.type === 'location_residentielle').length, color: '#534AB7' },
-    { label: 'Commercial',          value: properties.filter((p) => p.type === 'commercial').length, color: '#3B6D11' },
-    { label: 'Terrain',             value: properties.filter((p) => p.type === 'terrain').length, color: '#854F0B' },
+    { label: 'Villa',            value: properties.filter((p) => p.type === 'villa').length, color: '#185FA5' },
+    { label: 'Appartement',      value: properties.filter((p) => p.type === 'appartement').length, color: '#534AB7' },
+    { label: 'Maison',           value: properties.filter((p) => p.type === 'maison').length, color: '#3B6D11' },
+    { label: 'Local commercial', value: properties.filter((p) => p.type === 'commercial').length, color: '#854F0B' },
   ];
 
   // Pipeline stages derived from transactions
