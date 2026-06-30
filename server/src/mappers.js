@@ -126,6 +126,18 @@ function propertyToJSON(row) {
   };
 }
 
+function dayBlockToJSON(row) {
+  return {
+    id: row.id,
+    agentId: row.agent_id,
+    date: row.date,
+    start: row.start,
+    end: row.end,
+    label: row.label,
+    color: row.color,
+  };
+}
+
 function transactionToJSON(row) {
   return {
     id: row.id,
@@ -160,4 +172,4 @@ function documentToJSON(row) {
   };
 }
 
-module.exports = { userToAgent, userToAuth, clientToJSON, callToJSON, visitToJSON, crToJSON, propertyToJSON, documentToJSON, transactionToJSON };
+module.exports = { userToAgent, userToAuth, clientToJSON, callToJSON, visitToJSON, crToJSON, propertyToJSON, documentToJSON, transactionToJSON, dayBlockToJSON };

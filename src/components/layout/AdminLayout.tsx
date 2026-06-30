@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import {
   LayoutDashboard, Building2, Users, ArrowLeftRight,
-  Calendar, GitPullRequest, UserCheck, FileText, BarChart3, Phone,
+  Calendar, GitPullRequest, UserCheck, FileText, BarChart3, Phone, CalendarClock,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { label: 'Appels',          path: '/admin/appels',       icon: Phone },
   { label: 'Transactions',    path: '/admin/transactions', icon: ArrowLeftRight },
   { label: 'Pipeline',        path: '/admin/pipeline',     icon: GitPullRequest },
+  { label: 'Planning agents', path: '/admin/planning-agents', icon: CalendarClock },
   { label: 'Agenda',          path: '/admin/agenda',       icon: Calendar },
   { label: 'Documents',       path: '/admin/documents',    icon: FileText },
   { label: 'Rapports',        path: '/admin/rapports',     icon: BarChart3 },
@@ -27,6 +28,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/appels':       'Appels des agents',
   '/admin/transactions': 'Transactions',
   '/admin/pipeline':     'Pipeline commercial',
+  '/admin/planning-agents': 'Planning des agents',
   '/admin/agenda':       'Agenda',
   '/admin/documents':    'Documents',
   '/admin/rapports':     'Rapports & statistiques',

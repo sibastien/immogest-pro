@@ -97,6 +97,17 @@ db.exec(`
     created_at   TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS day_blocks (
+    id         TEXT PRIMARY KEY,
+    agent_id   TEXT NOT NULL,
+    date       TEXT NOT NULL,
+    start      TEXT NOT NULL,
+    end        TEXT NOT NULL,
+    label      TEXT NOT NULL DEFAULT '',
+    color      TEXT NOT NULL DEFAULT 'blue',
+    created_at TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS transactions (
     id          TEXT PRIMARY KEY,
     ref         TEXT,

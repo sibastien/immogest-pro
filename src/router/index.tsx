@@ -58,6 +58,8 @@ import { AgentTerrainPlanifierVisite } from '../pages/agent-terrain/PlanifierVis
 
 // Shared
 import { NouveauBien } from '../pages/shared/NouveauBien';
+import { MaJournee } from '../pages/shared/MaJournee';
+import { PlanningAgents } from '../pages/shared/PlanningAgents';
 
 // Client
 import { ClientDashboard } from '../pages/client/Dashboard';
@@ -133,6 +135,7 @@ export const router = createBrowserRouter([
           { path: 'equipe', element: <AdminTeam /> },
           { path: 'documents', element: <AdminDocuments /> },
           { path: 'rapports', element: <AdminRapports /> },
+          { path: 'planning-agents', element: <PlanningAgents /> },
           { path: 'parametres', element: <AdminSettings /> },
         ],
       },
@@ -154,6 +157,7 @@ export const router = createBrowserRouter([
           { path: 'dossiers', element: <CoordinatriceDossiers /> },
           { path: 'planning', element: <CoordinatricePlanning /> },
           { path: 'nouveau-bien', element: <NouveauBien /> },
+          { path: 'planning-agents', element: <PlanningAgents /> },
         ],
       },
     ],
@@ -173,6 +177,7 @@ export const router = createBrowserRouter([
           { path: 'nouvelle-fiche', element: <AgentBureauNouvelleFiche /> },
           { path: 'catalogue', element: <AgentBureauCatalogue /> },
           { path: 'nouveau-bien', element: <NouveauBien /> },
+          { path: 'ma-journee', element: <MaJournee /> },
           { path: 'agenda', element: <AdminAgenda /> },
         ],
       },
@@ -196,6 +201,7 @@ export const router = createBrowserRouter([
           { path: 'clients', element: <AgentTerrainClients /> },
           { path: 'nouvelle-fiche', element: <AgentTerrainNouvelleFiche /> },
           { path: 'nouveau-bien', element: <NouveauBien /> },
+          { path: 'ma-journee', element: <MaJournee /> },
           { path: 'performance', element: <AgentTerrainPerformance /> },
         ],
       },

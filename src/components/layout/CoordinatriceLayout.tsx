@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { useAgentsStore } from '../../store/agentsStore';
 import {
-  LayoutDashboard, Send, ClipboardCheck, Map, FolderOpen, CalendarDays, Building2,
+  LayoutDashboard, Send, ClipboardCheck, Map, FolderOpen, CalendarDays, Building2, CalendarClock,
 } from 'lucide-react';
 
 const PAGE_TITLES: Record<string, string> = {
@@ -15,6 +15,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/coordinatrice/dossiers':      'Dossiers actifs',
   '/coordinatrice/planning':      'Planning hebdo',
   '/coordinatrice/nouveau-bien':  'Nouveau bien',
+  '/coordinatrice/planning-agents': 'Planning des agents',
 };
 
 export const CoordinatriceLayout: React.FC = () => {
@@ -32,6 +33,7 @@ export const CoordinatriceLayout: React.FC = () => {
     { label: 'Dossiers',       path: '/coordinatrice/dossiers',      icon: FolderOpen },
     { label: 'Planning',       path: '/coordinatrice/planning',      icon: CalendarDays },
     { label: 'Nouveau bien',   path: '/coordinatrice/nouveau-bien',  icon: Building2 },
+    { label: 'Planning agents',path: '/coordinatrice/planning-agents', icon: CalendarClock },
   ];
 
   const title = PAGE_TITLES[pathname] ?? 'Coordinatrice';

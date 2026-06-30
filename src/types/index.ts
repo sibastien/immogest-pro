@@ -96,6 +96,16 @@ export interface CompteRendu {
   status: 'brouillon' | 'soumis' | 'valide' | 'correction_demandee';
 }
 
+export interface DayBlock {
+  id: string;
+  agentId: string;
+  date: string;   // YYYY-MM-DD
+  start: string;  // HH:MM
+  end: string;    // HH:MM
+  label: string;
+  color: string;  // blue | green | orange | purple | red
+}
+
 export interface Call {
   id: string;
   agentId: string;

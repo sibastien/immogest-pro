@@ -18,6 +18,7 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/clients', require('./routes/clients'));
 app.use('/api/properties', require('./routes/properties'));
 app.use('/api/transactions', require('./routes/transactions'));
+app.use('/api/day-blocks', require('./routes/dayBlocks'));
 app.use('/api/uploads', require('./routes/uploads'));
 app.use('/api/documents', require('./routes/documents'));
 app.use('/api/calls', require('./routes/calls'));
