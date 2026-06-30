@@ -8,6 +8,7 @@ import { Avatar } from '../../components/ui/Avatar';
 import { Card } from '../../components/ui/Card';
 import { Drawer } from '../../components/ui/Drawer';
 import { PhoneReveal } from '../../components/shared/PhoneReveal';
+import { PropertyMatches } from '../../components/PropertyMatches';
 import type { Client } from '../../types';
 
 const TYPE_LABELS = { acheteur: 'Acheteur', locataire: 'Locataire', proprietaire: 'Propriétaire' };
@@ -244,6 +245,14 @@ export const AgentBureauProspects: React.FC = () => {
                 <div className="text-xs text-gray-600 leading-5 bg-gray-50 rounded-lg p-2.5">{selected.notes}</div>
               </div>
             )}
+
+            {/* Matching biens */}
+            <div className="pt-3 border-t border-gray-100">
+              <PropertyMatches
+                client={selected}
+                onOpenProperty={(id) => { setSelected(null); navigate(`/agent-bureau/catalogue?bien=${id}`); }}
+              />
+            </div>
 
             {/* Actions */}
             <div className="pt-2 border-t border-gray-100">

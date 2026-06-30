@@ -252,7 +252,7 @@ export const ClientDetail: React.FC = () => {
                 )}
 
                 {/* Biens correspondants */}
-                {activeTab === 'biens' && <PropertyMatches client={client} />}
+                {activeTab === 'biens' && <PropertyMatches client={client} basePath="/admin/biens" />}
 
                 {/* Notes */}
                 {activeTab === 'notes' && (

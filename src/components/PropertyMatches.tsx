@@ -6,8 +6,10 @@ import type { Client, Property } from '../types';
 
 interface Props {
   client: Client;
-  /** Where to navigate when a match is clicked (defaults to admin). */
+  /** Navigate to `${basePath}/:id` when a match is clicked. */
   basePath?: string;
+  /** Custom open handler (takes precedence over basePath). */
+  onOpenProperty?: (id: string) => void;
 }
 
 interface Match {
@@ -24,6 +26,11 @@ function matchProperty(client: Client, p: Property): Match | null {
   const prefs = client.propertyPreferences ?? {};
   const reasons: string[] = [];
   let score = 0;
+
+  // Vente/Location: a buyer only sees sales, a renter only sees rentals.
+  const wantedTransaction =
+    client.type === 'acheteur' ? 'vente' : client.type === 'locataire' ? 'location' : null;
+  if (wantedTransaction && p.transaction !== wantedTransaction) return null;
 
   // Budget
   if (client.budget && (client.budget.min || client.budget.max)) {
@@ -57,9 +64,16 @@ const REASON_ICON: Record<string, React.FC<{ size?: number; className?: string }
   Budget: Wallet, Zone: MapPin, Type: Building2, Surface: Ruler, Pièces: Home,
 };
 
-export const PropertyMatches: React.FC<Props> = ({ client, basePath = '/admin/biens' }) => {
+export const PropertyMatches: React.FC<Props> = ({ client, basePath, onOpenProperty }) => {
   const navigate = useNavigate();
   const { properties } = usePropertiesStore();
+
+  // Rows are only clickable when there's somewhere to go.
+  const open = onOpenProperty
+    ? onOpenProperty
+    : basePath
+    ? (id: string) => navigate(`${basePath}/${id}`)
+    : undefined;
 
   const matches = useMemo(() => {
     return properties
@@ -101,8 +115,11 @@ export const PropertyMatches: React.FC<Props> = ({ client, basePath = '/admin/bi
         {matches.map(({ property: p, reasons }) => (
           <div
             key={p.id}
-            onClick={() => navigate(`${basePath}/${p.id}`)}
-            className="bg-white border border-gray-200 rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:border-primary/40 hover:bg-gray-50 transition-colors"
+            onClick={open ? () => open(p.id) : undefined}
+            className={[
+              'bg-white border border-gray-200 rounded-xl p-3 flex items-center gap-3 transition-colors',
+              open ? 'cursor-pointer hover:border-primary/40 hover:bg-gray-50' : '',
+            ].join(' ')}
           >
             <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
               {p.photos?.[0]
@@ -128,7 +145,7 @@ export const PropertyMatches: React.FC<Props> = ({ client, basePath = '/admin/bi
                 })}
               </div>
             </div>
-            <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
+            {open && <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />}
           </div>
         ))}
       </div>

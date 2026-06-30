@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, MapPin, Maximize2, BedDouble, Phone, Share2, X } from 'lucide-react';
 import { usePropertiesStore } from '../../store/propertiesStore';
 import { Badge } from '../../components/ui/Badge';
@@ -21,9 +22,16 @@ const STATUS_VARIANT = {
 
 export const AgentBureauCatalogue: React.FC = () => {
   const { properties } = usePropertiesStore();
+  const [searchParams] = useSearchParams();
   const [search, setSearch]         = useState('');
   const [typeFilter, setTypeFilter] = useState<PropertyType | ''>('');
   const [selected, setSelected]     = useState<string | null>(null);
+
+  // Preselect a bien when arriving from a client match (?bien=ID).
+  useEffect(() => {
+    const bien = searchParams.get('bien');
+    if (bien && properties.some((p) => p.id === bien)) setSelected(bien);
+  }, [searchParams, properties]);
 
   const filtered = properties.filter((p) => {
     if (p.status === 'vendu') return false; // hide sold
