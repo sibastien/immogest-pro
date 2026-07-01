@@ -3,6 +3,7 @@ import { Plus, X, ImagePlus } from 'lucide-react';
 import { usePropertiesStore } from '../../store/propertiesStore';
 import { useAgentsStore } from '../../store/agentsStore';
 import { useAuthStore } from '../../store/authStore';
+import { ProgressBar } from '../../components/ui/ProgressBar';
 import { api } from '../../lib/api';
 import type { Property, PropertyType, PropertyStatus, TransactionType } from '../../types';
 
@@ -117,17 +118,21 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
   };
 
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [uploadError, setUploadError] = useState('');
 
   const handlePhotos = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setUploading(true);
+    setProgress(0);
+    setUploadError('');
     try {
       const fd = new FormData();
       Array.from(files).forEach((f) => fd.append('files', f));
-      const uploaded = await api.upload<{ url: string }[]>('/uploads', fd);
+      const uploaded = await api.upload<{ url: string }[]>('/uploads', fd, setProgress);
       setForm((f) => ({ ...f, photos: [...(f.photos ?? []), ...uploaded.map((u) => u.url)] }));
     } catch {
-      // surfaced by the disabled state; keep it simple
+      setUploadError('Échec de l\'envoi des photos. Réessayez.');
     } finally {
       setUploading(false);
     }
@@ -150,6 +155,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (uploading) return; // wait until photos finish uploading
     if (!validate()) return;
 
     const { featureInput, ...rest } = form;
@@ -459,7 +465,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
           ))}
           <label className={`w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-primary hover:bg-primary-light/30 transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
             <ImagePlus size={20} className="text-gray-400" />
-            <span className="text-[10px] text-gray-500">{uploading ? 'Envoi…' : 'Ajouter'}</span>
+            <span className="text-[10px] text-gray-500">{uploading ? `${progress}%` : 'Ajouter'}</span>
             <input
               type="file"
               accept="image/*"
@@ -469,6 +475,10 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
             />
           </label>
         </div>
+        {uploading && (
+          <ProgressBar value={progress} color="blue" size="sm" showLabel label="Envoi des photos…" />
+        )}
+        {uploadError && <p className="text-xs text-danger">{uploadError}</p>}
         <p className="text-xs text-gray-400">JPEG/PNG · plusieurs photos possibles · 20 Mo max chacune.</p>
       </fieldset>
 
@@ -483,9 +493,12 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
         </button>
         <button
           type="submit"
-          className="flex-1 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors"
+          disabled={uploading}
+          className="flex-1 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary"
         >
-          {isEdit ? 'Enregistrer les modifications' : 'Ajouter le bien'}
+          {uploading
+            ? `Téléchargement des photos… ${progress}%`
+            : isEdit ? 'Enregistrer les modifications' : 'Ajouter le bien'}
         </button>
       </div>
     </form>
