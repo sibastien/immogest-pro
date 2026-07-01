@@ -35,6 +35,11 @@ export const AgentTerrainHome: React.FC = () => {
     .filter((v) => v.agentId === user?.agentId && v.date === todayISO())
     .sort((a, b) => a.time.localeCompare(b.time));
 
+  const upcomingVisits = visits
+    .filter((v) => v.agentId === user?.agentId && v.date > todayISO() && v.status !== 'annule')
+    .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`))
+    .slice(0, 6);
+
   const done = myVisits.filter((v) => v.status === 'effectue').length;
 
   return (
@@ -141,6 +146,42 @@ export const AgentTerrainHome: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Upcoming visits (future days) */}
+      {upcomingVisits.length > 0 && (
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Prochaines visites</h3>
+          <div className="space-y-2">
+            {upcomingVisits.map((visit) => {
+              const property = properties.find((p) => p.id === visit.propertyId);
+              const client = clients.find((c) => c.id === visit.clientId);
+              return (
+                <div
+                  key={visit.id}
+                  onClick={() => navigate(`/agent-terrain/visites/${visit.id}`)}
+                  className="bg-white rounded-xl border border-gray-200 p-3 flex items-center gap-3 cursor-pointer active:bg-gray-50 transition-colors"
+                >
+                  <div className="text-center flex-shrink-0 w-12">
+                    <div className="text-xs font-semibold text-primary">
+                      {new Date(visit.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                    </div>
+                    <div className="text-xs text-gray-400 font-mono">{visit.time}</div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{property?.title ?? 'Bien'}</p>
+                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                      <MapPin size={11} />
+                      <span>{property?.location}</span>
+                      {client && (<><span className="mx-1">·</span><span>{client.name}</span></>)}
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

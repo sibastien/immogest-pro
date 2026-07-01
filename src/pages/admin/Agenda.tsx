@@ -35,9 +35,10 @@ function fmt(y: number, m: number, d: number) {
 }
 
 export const AdminAgenda: React.FC = () => {
-  const { appointments, addAppointment, agents } = useAgentsStore();
+  const { appointments, addAppointment, addVisit, visits, agents } = useAgentsStore();
   const { properties } = usePropertiesStore();
   const { clients }    = useClientsStore();
+  const [formError, setFormError] = useState('');
 
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewDate, setViewDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
@@ -72,31 +73,58 @@ export const AdminAgenda: React.FC = () => {
   const prevMonth = () => setViewDate(new Date(year, month - 1, 1));
   const nextMonth = () => setViewDate(new Date(year, month + 1, 1));
 
-  // appointments on selected date
+  // appointments + visits on selected date
   const dayAppts = appointments
     .filter((a) => a.date === selected)
     .sort((a, b) => a.time.localeCompare(b.time));
+  const dayVisits = visits
+    .filter((v) => v.date === selected)
+    .sort((a, b) => a.time.localeCompare(b.time));
+  const dayCount = dayAppts.length + dayVisits.length;
 
-  // count per day for dots
+  // count per day for dots (RDV + visites)
   const countByDate = new Map<string, number>();
   appointments.forEach((a) => countByDate.set(a.date, (countByDate.get(a.date) ?? 0) + 1));
+  visits.forEach((v) => countByDate.set(v.date, (countByDate.get(v.date) ?? 0) + 1));
 
   const handleCreate = () => {
-    if (!newAppt.title.trim()) return;
-    addAppointment({
-      id:       `appt-${Date.now()}`,
-      title:    newAppt.title,
-      date:     selected,
-      time:     newAppt.time,
-      duration: 60,
-      type:       newAppt.type,
-      agentId:    newAppt.agentId || agents[0]?.id || '',
-      clientId:   newAppt.clientId || undefined,
-      propertyId: newAppt.propertyId || undefined,
-      status:     'planifie',
-      notes:      newAppt.notes || undefined,
-    });
+    if (!newAppt.title.trim()) { setFormError('Le titre est obligatoire.'); return; }
+
+    // A "visite" becomes a real persisted Visit so the assigned agent sees it in
+    // their app (journal / plan de visite). Other types stay as local RDV.
+    if (newAppt.type === 'visite') {
+      if (!newAppt.agentId || !newAppt.clientId || !newAppt.propertyId) {
+        setFormError('Pour une visite : sélectionnez un agent, un client et un bien.');
+        return;
+      }
+      addVisit({
+        id:          `visit-${Date.now()}`,
+        propertyId:  newAppt.propertyId,
+        clientId:    newAppt.clientId,
+        agentId:     newAppt.agentId,
+        date:        selected,
+        time:        newAppt.time,
+        status:      'planifie',
+        crSubmitted: false,
+        notes:       newAppt.notes || undefined,
+      });
+    } else {
+      addAppointment({
+        id:       `appt-${Date.now()}`,
+        title:    newAppt.title,
+        date:     selected,
+        time:     newAppt.time,
+        duration: 60,
+        type:       newAppt.type,
+        agentId:    newAppt.agentId || agents[0]?.id || '',
+        clientId:   newAppt.clientId || undefined,
+        propertyId: newAppt.propertyId || undefined,
+        status:     'planifie',
+        notes:      newAppt.notes || undefined,
+      });
+    }
     setDrawerOpen(false);
+    setFormError('');
     setNewAppt({ title: '', time: '10:00', type: 'visite', agentId: '', clientId: '', propertyId: '', notes: '' });
   };
 
@@ -184,10 +212,47 @@ export const AdminAgenda: React.FC = () => {
             <h3 className="text-sm font-semibold text-gray-700">
               {new Date(selected).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
             </h3>
-            <span className="text-xs text-gray-400">{dayAppts.length} RDV</span>
+            <span className="text-xs text-gray-400">{dayCount} RDV</span>
           </div>
 
           <div className="space-y-2">
+            {/* Visites (persistées — vues par l'agent) */}
+            {dayVisits.map((visit) => {
+              const agent  = agents.find((a) => a.id === visit.agentId);
+              const client = visit.clientId ? clients.find((c) => c.id === visit.clientId) : undefined;
+              const prop   = visit.propertyId ? properties.find((p) => p.id === visit.propertyId) : undefined;
+              return (
+                <div key={visit.id} className="bg-white rounded-xl border p-3 bg-primary-light border-primary/20">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-mono font-bold text-gray-700">{visit.time}</span>
+                    <Badge variant={visit.status === 'effectue' ? 'gray' : 'info'} size="sm" dot />
+                    <span className="text-xs font-medium text-primary">Visite</span>
+                  </div>
+                  <div className="text-sm font-semibold text-gray-900 mb-1">{prop?.title ?? 'Bien'}</div>
+                  {prop && (
+                    <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                      <MapPin size={11} /> {prop.location}
+                    </div>
+                  )}
+                  {client && (
+                    <div className="flex items-center gap-2">
+                      <User size={11} className="text-gray-400" />
+                      <span className="text-xs text-gray-600">{client.name}</span>
+                      <PhoneReveal phone={client.phone} name={client.name} className="ml-auto">
+                        <Phone size={12} className="text-primary" />
+                      </PhoneReveal>
+                    </div>
+                  )}
+                  {agent && (
+                    <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-primary/10">
+                      <Avatar initials={agent.initials} size="xs" />
+                      <span className="text-xs text-gray-500">{agent.name}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
             {dayAppts.map((appt) => {
               const cfg     = TYPE_CONFIG[appt.type];
               const agent   = agents.find((a) => a.id === appt.agentId);
@@ -229,7 +294,7 @@ export const AdminAgenda: React.FC = () => {
               );
             })}
 
-            {dayAppts.length === 0 && (
+            {dayCount === 0 && (
               <div className="text-center py-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
                 <Clock size={24} className="mx-auto mb-2 opacity-30" />
                 <p className="text-xs">Aucun RDV ce jour</p>
@@ -328,6 +393,10 @@ export const AdminAgenda: React.FC = () => {
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
             />
           </div>
+          {newAppt.type === 'visite' && (
+            <p className="text-xs text-gray-400">Une visite est envoyée à l'agent : agent, client et bien sont requis.</p>
+          )}
+          {formError && <p className="text-xs text-danger">{formError}</p>}
           <div className="flex gap-3 pt-2">
             <button onClick={() => setDrawerOpen(false)} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Annuler</button>
             <button onClick={handleCreate} className="flex-1 py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90">Créer le RDV</button>
