@@ -377,13 +377,22 @@ export const ClientDetail: React.FC = () => {
             <Card>
               <div className="text-xs font-medium text-gray-500 mb-3">Actions rapides</div>
               <div className="space-y-2">
-                <button className="w-full flex items-center gap-2 px-3 py-2 bg-primary text-white text-xs rounded-lg hover:bg-primary/90 transition-colors">
+                <button
+                  onClick={() => navigate(`/admin/agenda?client=${client.id}`)}
+                  className="w-full flex items-center gap-2 px-3 py-2 bg-primary text-white text-xs rounded-lg hover:bg-primary/90 transition-colors"
+                >
                   <Calendar size={13} /> Planifier un RDV
                 </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 border border-gray-200 text-xs text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                <button
+                  onClick={() => setActiveTab('biens')}
+                  className="w-full flex items-center gap-2 px-3 py-2 border border-gray-200 text-xs text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
                   <Eye size={13} /> Proposer un bien
                 </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 border border-gray-200 text-xs text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                <button
+                  onClick={() => { window.location.href = client.email ? `mailto:${client.email}` : `sms:${client.phone}`; }}
+                  className="w-full flex items-center gap-2 px-3 py-2 border border-gray-200 text-xs text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
                   <MessageSquare size={13} /> Envoyer un message
                 </button>
               </div>

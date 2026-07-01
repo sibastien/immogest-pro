@@ -415,7 +415,10 @@ export const PropertyDetail: React.FC = () => {
           <Card>
             <div className="text-xs font-medium text-gray-500 mb-3">Actions rapides</div>
             <div className="space-y-2">
-              <button className="w-full flex items-center gap-2 px-3 py-2 bg-primary text-white text-xs rounded-lg hover:bg-primary/90 transition-colors">
+              <button
+                onClick={() => navigate(`/admin/agenda?property=${property.id}`)}
+                className="w-full flex items-center gap-2 px-3 py-2 bg-primary text-white text-xs rounded-lg hover:bg-primary/90 transition-colors"
+              >
                 <Calendar size={13} /> Planifier une visite
               </button>
               <button
@@ -424,7 +427,10 @@ export const PropertyDetail: React.FC = () => {
               >
                 <Edit2 size={13} /> Modifier le bien
               </button>
-              <button className="w-full flex items-center gap-2 px-3 py-2 border border-gray-200 text-xs text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+              <button
+                onClick={() => navigate('/admin/biens')}
+                className="w-full flex items-center gap-2 px-3 py-2 border border-gray-200 text-xs text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <Eye size={13} /> Voir dans le catalogue
               </button>
             </div>

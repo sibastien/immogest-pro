@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Search, MapPin, Maximize2, BedDouble, Phone, Share2, X } from 'lucide-react';
 import { usePropertiesStore } from '../../store/propertiesStore';
 import { Badge } from '../../components/ui/Badge';
-import type { PropertyType } from '../../types';
+import type { Property, PropertyType } from '../../types';
 
 const TYPE_LABELS: Record<PropertyType, string> = {
   villa:       'Villa',
@@ -44,6 +44,16 @@ export const AgentBureauCatalogue: React.FC = () => {
   });
 
   const selectedProp = selected ? properties.find((p) => p.id === selected) : null;
+
+  // Share a listing with a client (native share sheet, or clipboard fallback).
+  const shareProperty = async (p: Property) => {
+    const price = `${new Intl.NumberFormat('fr-TN').format(p.price)} DT${p.priceType === 'mois' ? '/mois' : ''}`;
+    const text = `${p.title}\nRéf : ${p.ref}\n${p.location} · ${p.surface} m²\n${price}`;
+    try {
+      if (navigator.share) await navigator.share({ title: p.title, text });
+      else { await navigator.clipboard.writeText(text); alert('Détails du bien copiés dans le presse-papiers.'); }
+    } catch { /* user cancelled the share */ }
+  };
 
   return (
     <div className="space-y-4">
@@ -188,10 +198,16 @@ export const AgentBureauCatalogue: React.FC = () => {
 
             {/* Actions */}
             <div className="flex gap-2">
-              <button className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary/90 transition-colors">
+              <button
+                onClick={() => shareProperty(selectedProp)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary/90 transition-colors"
+              >
                 <Phone size={12} /> Proposer au client
               </button>
-              <button className="w-9 h-9 flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <button
+                onClick={() => shareProperty(selectedProp)}
+                className="w-9 h-9 flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <Share2 size={14} className="text-gray-500" />
               </button>
             </div>

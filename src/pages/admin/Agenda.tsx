@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Plus, Clock, MapPin, User, Phone } from 'lucide-react';
 import { useAgentsStore } from '../../store/agentsStore';
 import { usePropertiesStore } from '../../store/propertiesStore';
@@ -38,10 +39,30 @@ export const AdminAgenda: React.FC = () => {
   const { properties } = usePropertiesStore();
   const { clients }    = useClientsStore();
 
+  const [searchParams, setSearchParams] = useSearchParams();
   const [viewDate, setViewDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [selected, setSelected] = useState<string>(new Date().toISOString().slice(0, 10));
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [newAppt, setNewAppt] = useState({ title: '', time: '10:00', type: 'visite' as Appointment['type'], agentId: '', clientId: '', notes: '' });
+  const [newAppt, setNewAppt] = useState({ title: '', time: '10:00', type: 'visite' as Appointment['type'], agentId: '', clientId: '', propertyId: '', notes: '' });
+
+  // Opened from a bien/client ("Planifier une visite/RDV"): prefill + open the form.
+  useEffect(() => {
+    const property = searchParams.get('property');
+    const client = searchParams.get('client');
+    if (!property && !client && searchParams.get('open') !== '1') return;
+    const prop = property ? properties.find((p) => p.id === property) : undefined;
+    const cli  = client ? clients.find((c) => c.id === client) : undefined;
+    setNewAppt((p) => ({
+      ...p,
+      type: 'visite',
+      propertyId: property || '',
+      clientId: client || '',
+      agentId: prop?.agentId || cli?.agentId || p.agentId,
+      title: prop ? `Visite — ${prop.title}` : cli ? `RDV — ${cli.name}` : p.title,
+    }));
+    setDrawerOpen(true);
+    setSearchParams({}, { replace: true }); // consume the params so it won't reopen
+  }, [searchParams, properties, clients, setSearchParams]);
 
   const year  = viewDate.getFullYear();
   const month = viewDate.getMonth();
@@ -68,14 +89,15 @@ export const AdminAgenda: React.FC = () => {
       date:     selected,
       time:     newAppt.time,
       duration: 60,
-      type:     newAppt.type,
-      agentId:  newAppt.agentId || agents[0]?.id || '',
-      clientId: newAppt.clientId || undefined,
-      status:   'planifie',
-      notes:    newAppt.notes || undefined,
+      type:       newAppt.type,
+      agentId:    newAppt.agentId || agents[0]?.id || '',
+      clientId:   newAppt.clientId || undefined,
+      propertyId: newAppt.propertyId || undefined,
+      status:     'planifie',
+      notes:      newAppt.notes || undefined,
     });
     setDrawerOpen(false);
-    setNewAppt({ title: '', time: '10:00', type: 'visite', agentId: '', clientId: '', notes: '' });
+    setNewAppt({ title: '', time: '10:00', type: 'visite', agentId: '', clientId: '', propertyId: '', notes: '' });
   };
 
   return (
@@ -283,6 +305,17 @@ export const AdminAgenda: React.FC = () => {
             >
               <option value="">— Aucun —</option>
               {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Bien (optionnel)</label>
+            <select
+              value={newAppt.propertyId}
+              onChange={(e) => setNewAppt((p) => ({ ...p, propertyId: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+            >
+              <option value="">— Aucun —</option>
+              {properties.map((p) => <option key={p.id} value={p.id}>{p.ref} · {p.title}</option>)}
             </select>
           </div>
           <div>
