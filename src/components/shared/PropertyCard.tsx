@@ -30,9 +30,11 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, onClick })
       onClick={onClick}
       className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden cursor-pointer hover:shadow-md hover:border-gray-300 transition-all"
     >
-      {/* Photo placeholder */}
-      <div className="h-40 bg-gradient-to-br from-gray-100 to-gray-200 relative flex items-center justify-center">
-        <div className="text-gray-300 text-4xl font-light">IG</div>
+      {/* Photo (first one) with placeholder fallback */}
+      <div className="h-40 bg-gradient-to-br from-gray-100 to-gray-200 relative flex items-center justify-center overflow-hidden">
+        {property.photos?.[0]
+          ? <img src={property.photos[0]} alt={property.title} className="w-full h-full object-cover" />
+          : <div className="text-gray-300 text-4xl font-light">IG</div>}
         <div className="absolute top-2 left-2">
           <Badge
             variant={
