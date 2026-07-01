@@ -20,7 +20,12 @@ const OUTCOME = {
 function addDays(iso: string, n: number) {
   const d = new Date(iso + 'T00:00:00');
   d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
+  // Format from local components — toISOString() would shift the day in
+  // non-UTC timezones (e.g. UTC+1), which made the day navigator misbehave.
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 function dayLabel(iso: string) {
