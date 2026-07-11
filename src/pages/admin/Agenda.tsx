@@ -8,6 +8,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { Drawer } from '../../components/ui/Drawer';
 import { PhoneReveal } from '../../components/shared/PhoneReveal';
+import { BonDeVisiteButton } from '../../components/shared/BonDeVisiteButton';
 import type { Appointment } from '../../types';
 
 const DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -249,6 +250,12 @@ export const AdminAgenda: React.FC = () => {
                       <span className="text-xs text-gray-500">{agent.name}</span>
                     </div>
                   )}
+                  <BonDeVisiteButton
+                    clientName={client?.name}
+                    visitDate={visit.date}
+                    propertyRef={prop?.ref}
+                    className="mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 border border-primary/30 text-primary rounded-lg text-xs font-medium hover:bg-primary/5 transition-colors"
+                  />
                 </div>
               );
             })}

@@ -9,6 +9,7 @@ import { useClientsStore } from '../../store/clientsStore';
 import { usePropertiesStore } from '../../store/propertiesStore';
 import { Badge } from '../../components/ui/Badge';
 import { PhoneReveal } from '../../components/shared/PhoneReveal';
+import { BonDeVisiteButton } from '../../components/shared/BonDeVisiteButton';
 
 const STATUS_MAP: Record<string, { label: string; variant: 'info' | 'disponible' | 'gray'; Icon: React.FC<{ size?: number; className?: string }> }> = {
   planifie:  { label: 'Planifiée',  variant: 'info',       Icon: Clock },
@@ -268,6 +269,13 @@ export const VisiteDetail: React.FC = () => {
             Rédiger le compte-rendu
           </button>
         )}
+
+        <BonDeVisiteButton
+          clientName={client?.name}
+          visitDate={visit.date}
+          propertyRef={property?.ref}
+          className="w-full flex items-center justify-center gap-2 py-3 border border-primary/30 text-primary font-medium text-sm rounded-xl hover:bg-primary/5 transition-colors"
+        />
       </div>
     </div>
   );
