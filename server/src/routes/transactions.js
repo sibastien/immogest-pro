@@ -1,6 +1,6 @@
 const express = require('express');
 const db = require('../db');
-const { protect } = require('../middleware/auth');
+const { protect, requireRole } = require('../middleware/auth');
 const { transactionToJSON } = require('../mappers');
 
 const router = express.Router();
@@ -83,6 +83,15 @@ router.post('/:id/close', (req, res) => {
   close();
 
   res.json(transactionToJSON(db.prepare('SELECT * FROM transactions WHERE id = ?').get(tx.id)));
+});
+
+// DELETE /api/transactions/:id — remove a deal. Admin only. Does NOT change the
+// linked property/client status (only the transaction row is removed).
+router.delete('/:id', requireRole('admin'), (req, res) => {
+  const existing = db.prepare('SELECT id FROM transactions WHERE id = ?').get(req.params.id);
+  if (!existing) return res.status(404).json({ error: 'Transaction introuvable.' });
+  db.prepare('DELETE FROM transactions WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
 });
 
 module.exports = router;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Banknote, TrendingUp, ArrowUpRight, Filter, X, Plus, CheckCircle2 } from 'lucide-react';
+import { Search, Banknote, TrendingUp, ArrowUpRight, Filter, X, Plus, CheckCircle2, Trash2 } from 'lucide-react';
 import { useAgentsStore } from '../../store/agentsStore';
 import { usePropertiesStore } from '../../store/propertiesStore';
 import { useClientsStore } from '../../store/clientsStore';
@@ -37,7 +37,7 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export const AdminTransactions: React.FC = () => {
-  const { transactions, agents, addTransaction, closeTransaction } = useAgentsStore();
+  const { transactions, agents, addTransaction, closeTransaction, deleteTransaction } = useAgentsStore();
   const { properties }           = usePropertiesStore();
   const { clients }              = useClientsStore();
   const { user }                 = useAuthStore();
@@ -84,6 +84,12 @@ export const AdminTransactions: React.FC = () => {
     const isRental = tx.transaction === 'location';
     if (window.confirm(`Clôturer cette transaction ?\nLe bien « ${prop?.title ?? ''} » sera marqué comme ${isRental ? 'loué' : 'vendu'} et le client comme clôturé.`)) {
       closeTransaction(tx.id);
+    }
+  };
+
+  const handleDelete = (tx: Transaction) => {
+    if (window.confirm(`Supprimer la transaction « ${tx.ref} » ?\nElle ne comptera plus dans le CA. Action irréversible.`)) {
+      deleteTransaction(tx.id);
     }
   };
 
@@ -219,18 +225,27 @@ export const AdminTransactions: React.FC = () => {
                     {new Date(tx.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    {tx.stage === 'cloture' ? (
-                      <span className="inline-flex items-center gap-1 text-xs text-success font-medium">
-                        <CheckCircle2 size={13} /> Clôturée
-                      </span>
-                    ) : (
+                    <div className="flex items-center justify-end gap-1.5">
+                      {tx.stage === 'cloture' ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-success font-medium">
+                          <CheckCircle2 size={13} /> Clôturée
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleClose(tx)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-success/40 text-success rounded-lg text-xs font-medium hover:bg-success-light transition-colors"
+                        >
+                          <CheckCircle2 size={12} /> {tx.transaction === 'location' ? 'Marquer loué' : 'Marquer vendu'}
+                        </button>
+                      )}
                       <button
-                        onClick={() => handleClose(tx)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 border border-success/40 text-success rounded-lg text-xs font-medium hover:bg-success-light transition-colors"
+                        onClick={() => handleDelete(tx)}
+                        title="Supprimer cette transaction"
+                        className="p-1.5 text-gray-300 hover:text-danger transition-colors"
                       >
-                        <CheckCircle2 size={12} /> {tx.transaction === 'location' ? 'Marquer loué' : 'Marquer vendu'}
+                        <Trash2 size={14} />
                       </button>
-                    )}
+                    </div>
                   </td>
                 </tr>
               );

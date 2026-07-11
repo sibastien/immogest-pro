@@ -29,6 +29,7 @@ interface AgentsState {
   rejectCR: (crId: string, reason: string) => void;
   addTransaction: (tx: Transaction) => void;
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
+  deleteTransaction: (id: string) => void;
   closeTransaction: (id: string) => void;
 }
 
@@ -144,6 +145,12 @@ export const useAgentsStore = create<AgentsState>((set, get) => ({
       transactions: state.transactions.map((t) => (t.id === id ? { ...t, ...updates } : t)),
     }));
     api.put<Transaction>(`/transactions/${id}`, updates).catch(() => get().loadTransactions());
+  },
+
+  // Optimistic delete; reload on failure (e.g. non-admin gets 403).
+  deleteTransaction: (id) => {
+    set((state) => ({ transactions: state.transactions.filter((t) => t.id !== id) }));
+    api.del(`/transactions/${id}`).catch(() => get().loadTransactions());
   },
 
   // Mark as sold/rented: closes the deal and, server-side, flips the property to
