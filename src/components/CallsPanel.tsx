@@ -52,6 +52,8 @@ export const CallsPanel: React.FC = () => {
   // Create form
   const [open, setOpen] = useState(false);
   const [clientId, setClientId] = useState('');
+  const [clientQuery, setClientQuery] = useState('');
+  const [clientListOpen, setClientListOpen] = useState(false);
   const [freeName, setFreeName] = useState('');
   const [freePhone, setFreePhone] = useState('');
   const [type, setType] = useState<Call['type']>('sortant');
@@ -74,8 +76,19 @@ export const CallsPanel: React.FC = () => {
       .sort((a, b) => `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`));
   }, [calls, search, searching, selectedDate]);
 
+  const selectedClient = clients.find((c) => c.id === clientId);
+
+  const clientMatches = useMemo(() => {
+    const q = clientQuery.trim().toLowerCase();
+    if (!q) return clients.slice(0, 8);
+    return clients
+      .filter((c) => c.name.toLowerCase().includes(q) || c.phone?.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [clients, clientQuery]);
+
   const resetForm = () => {
-    setClientId(''); setFreeName(''); setFreePhone('');
+    setClientId(''); setClientQuery(''); setClientListOpen(false);
+    setFreeName(''); setFreePhone('');
     setType('sortant'); setOutcome('joint'); setNotes(''); setError('');
   };
 
@@ -142,14 +155,56 @@ export const CallsPanel: React.FC = () => {
           <div className="space-y-3">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1.5">Client (depuis une fiche)</label>
-              <select
-                value={clientId}
-                onChange={(e) => { setClientId(e.target.value); setError(''); }}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
-              >
-                <option value="">— Client hors fiche —</option>
-                {clients.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.phone}</option>)}
-              </select>
+              {selectedClient ? (
+                <div className="flex items-center justify-between px-3 py-2 border border-primary/40 bg-primary/5 rounded-lg text-sm">
+                  <span className="truncate">
+                    <span className="font-medium text-gray-900">{selectedClient.name}</span>
+                    {selectedClient.phone && <span className="text-gray-500 font-mono ml-2">{selectedClient.phone}</span>}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => { setClientId(''); setClientQuery(''); }}
+                    className="text-gray-400 hover:text-gray-600 flex-shrink-0 ml-2"
+                    aria-label="Retirer le client"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={clientQuery}
+                    onChange={(e) => { setClientQuery(e.target.value); setClientListOpen(true); setError(''); }}
+                    onFocus={() => setClientListOpen(true)}
+                    onBlur={() => setTimeout(() => setClientListOpen(false), 150)}
+                    placeholder="Rechercher un client par nom ou téléphone…"
+                    className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  {clientListOpen && (
+                    <div className="absolute z-10 left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+                      {clientMatches.map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => { setClientId(c.id); setClientListOpen(false); setError(''); }}
+                          className="w-full flex items-center justify-between px-3 py-2 text-sm text-left hover:bg-gray-50"
+                        >
+                          <span className="font-medium text-gray-900 truncate">{c.name}</span>
+                          {c.phone && <span className="text-xs text-gray-400 font-mono ml-2 flex-shrink-0">{c.phone}</span>}
+                        </button>
+                      ))}
+                      {clientMatches.length === 0 && (
+                        <div className="px-3 py-2.5 text-xs text-gray-400">
+                          Aucun client trouvé — saisissez le contact ci-dessous.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {!clientId && (
