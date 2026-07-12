@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, MapPin, Maximize2, BedDouble, Phone, Share2, X } from 'lucide-react';
+import { Search, MapPin, Maximize2, BedDouble, Phone, Share2, X, Pencil, Trash2 } from 'lucide-react';
 import { usePropertiesStore } from '../../store/propertiesStore';
 import { Badge } from '../../components/ui/Badge';
-import type { Property, PropertyType } from '../../types';
+import { PropertyForm } from '../admin/PropertyForm';
+import type { Property, PropertyType, PropertyStatus } from '../../types';
+
+const STATUS_LABELS: Record<PropertyStatus, string> = {
+  disponible:     'Disponible',
+  sous_compromis: 'Sous compromis',
+  loue:           'Loué',
+  vendu:          'Vendu',
+};
 
 const TYPE_LABELS: Record<PropertyType, string> = {
   villa:       'Villa',
@@ -21,11 +29,12 @@ const STATUS_VARIANT = {
 };
 
 export const AgentBureauCatalogue: React.FC = () => {
-  const { properties } = usePropertiesStore();
+  const { properties, updateProperty, deleteProperty } = usePropertiesStore();
   const [searchParams] = useSearchParams();
   const [search, setSearch]         = useState('');
   const [typeFilter, setTypeFilter] = useState<PropertyType | ''>('');
   const [selected, setSelected]     = useState<string | null>(null);
+  const [editing, setEditing]       = useState(false);
 
   // Preselect a bien when arriving from a client match (?bien=ID).
   useEffect(() => {
@@ -44,6 +53,13 @@ export const AgentBureauCatalogue: React.FC = () => {
   });
 
   const selectedProp = selected ? properties.find((p) => p.id === selected) : null;
+
+  const handleDelete = (p: Property) => {
+    if (!window.confirm(`Supprimer le bien « ${p.title} » (${p.ref}) ? Cette action est définitive.`)) return;
+    deleteProperty(p.id);
+    setSelected(null);
+    setEditing(false);
+  };
 
   // Share a listing with a client (native share sheet, or clipboard fallback).
   const shareProperty = async (p: Property) => {
@@ -98,7 +114,7 @@ export const AgentBureauCatalogue: React.FC = () => {
             return (
               <div
                 key={p.id}
-                onClick={() => setSelected(isSelected ? null : p.id)}
+                onClick={() => { setSelected(isSelected ? null : p.id); setEditing(false); }}
                 className={[
                   'bg-white rounded-xl border p-3 cursor-pointer transition-all',
                   isSelected ? 'border-primary bg-primary-light shadow-md' : 'border-gray-200 hover:border-gray-300 hover:shadow-sm',
@@ -138,7 +154,22 @@ export const AgentBureauCatalogue: React.FC = () => {
         </div>
 
         {/* Detail panel */}
-        {selectedProp && (
+        {selectedProp && editing && (
+          <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm p-5 self-start">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-gray-900">Modifier le bien · {selectedProp.ref}</h3>
+              <button onClick={() => setEditing(false)} className="w-7 h-7 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-50">
+                <X size={13} className="text-gray-400" />
+              </button>
+            </div>
+            <PropertyForm
+              property={selectedProp}
+              onSuccess={() => setEditing(false)}
+              onCancel={() => setEditing(false)}
+            />
+          </div>
+        )}
+        {selectedProp && !editing && (
           <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm p-5 self-start sticky top-4">
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -196,6 +227,21 @@ export const AgentBureauCatalogue: React.FC = () => {
               </div>
             )}
 
+            {/* Status */}
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Statut du bien</label>
+              <select
+                value={selectedProp.status}
+                onChange={(e) => updateProperty(selectedProp.id, { status: e.target.value as PropertyStatus })}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30"
+              >
+                {(Object.entries(STATUS_LABELS) as [PropertyStatus, string][]).map(([v, l]) => (
+                  <option key={v} value={v}>{l}</option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-400 mt-1">Un bien « Vendu » disparaît du catalogue.</p>
+            </div>
+
             {/* Actions */}
             <div className="flex gap-2">
               <button
@@ -207,8 +253,23 @@ export const AgentBureauCatalogue: React.FC = () => {
               <button
                 onClick={() => shareProperty(selectedProp)}
                 className="w-9 h-9 flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                title="Partager"
               >
                 <Share2 size={14} className="text-gray-500" />
+              </button>
+              <button
+                onClick={() => setEditing(true)}
+                className="w-9 h-9 flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                title="Modifier le bien"
+              >
+                <Pencil size={14} className="text-gray-500" />
+              </button>
+              <button
+                onClick={() => handleDelete(selectedProp)}
+                className="w-9 h-9 flex items-center justify-center border border-danger/30 rounded-lg hover:bg-danger-light transition-colors"
+                title="Supprimer le bien"
+              >
+                <Trash2 size={14} className="text-danger" />
               </button>
             </div>
           </div>

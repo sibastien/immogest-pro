@@ -79,8 +79,8 @@ router.put('/:id', (req, res) => {
   res.json(propertyToJSON(db.prepare('SELECT * FROM properties WHERE id = ?').get(req.params.id)));
 });
 
-// DELETE /api/properties/:id — admin only.
-router.delete('/:id', requireRole('admin'), (req, res) => {
+// DELETE /api/properties/:id — admin and agent bureau (catalogue management).
+router.delete('/:id', requireRole('admin', 'agent_bureau'), (req, res) => {
   db.prepare('DELETE FROM properties WHERE id = ?').run(req.params.id);
   res.json({ ok: true });
 });
