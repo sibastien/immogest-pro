@@ -6,6 +6,7 @@ import {
   Star,
 } from 'lucide-react';
 import { useClientsStore } from '../../store/clientsStore';
+import { useCallsStore } from '../../store/callsStore';
 import { PropertyMatches } from '../../components/PropertyMatches';
 import { useAgentsStore } from '../../store/agentsStore';
 import { usePropertiesStore } from '../../store/propertiesStore';
@@ -15,7 +16,7 @@ import { Card } from '../../components/ui/Card';
 import { Drawer } from '../../components/ui/Drawer';
 import { PhoneReveal } from '../../components/shared/PhoneReveal';
 import { ClientForm } from './ClientForm';
-import type { Client, Visit } from '../../types';
+import type { Client, Visit, Call } from '../../types';
 
 const TYPE_LABELS: Record<Client['type'], string> = {
   acheteur: 'Acheteur',
@@ -33,9 +34,15 @@ const STATUS_BADGE: Record<Client['status'], 'actif' | 'a_relancer' | 'compromis
   actif: 'actif', a_relancer: 'a_relancer', compromis: 'compromis', cloture: 'cloture',
 };
 
-// Mock interaction history
-const buildHistory = (client: Client, visits: Visit[]) => {
+const CALL_OUTCOME_LABELS: Record<Call['outcome'], string> = {
+  joint: 'joint',
+  non_repondu: 'sans réponse',
+  rappel: 'à rappeler',
+};
+
+const buildHistory = (client: Client, visits: Visit[], calls: Call[]) => {
   const clientVisits = visits.filter((v) => v.clientId === client.id);
+  const clientCalls = calls.filter((c) => c.clientId === client.id);
   const events = [
     {
       id: 'ev-0',
@@ -43,6 +50,7 @@ const buildHistory = (client: Client, visits: Visit[]) => {
       date: client.createdAt,
       time: '09:15',
       text: 'Fiche client créée',
+      notes: undefined as string | undefined,
       icon: User,
       color: 'text-gray-500 bg-gray-100',
     },
@@ -52,20 +60,22 @@ const buildHistory = (client: Client, visits: Visit[]) => {
       date: v.date,
       time: v.time,
       text: `Visite ${v.status === 'effectue' ? 'effectuée' : 'planifiée'}${v.crSubmitted ? ' · C.R. soumis' : ''}`,
+      notes: undefined as string | undefined,
       icon: v.status === 'effectue' ? CheckCircle2 : Calendar,
       color: v.status === 'effectue' ? 'text-success bg-success-light' : 'text-primary bg-primary-light',
     })),
-    {
-      id: 'ev-lc',
+    ...clientCalls.map((c) => ({
+      id: c.id,
       type: 'appel' as const,
-      date: client.lastContact,
-      time: '14:30',
-      text: 'Dernier contact téléphonique',
+      date: c.date,
+      time: c.time,
+      text: `Appel ${c.type === 'entrant' ? 'entrant' : 'sortant'} · ${CALL_OUTCOME_LABELS[c.outcome] ?? c.outcome}${c.agentName ? ` · ${c.agentName}` : ''}`,
+      notes: c.notes || undefined,
       icon: Phone,
       color: 'text-warning bg-warning-light',
-    },
+    })),
   ];
-  return events.sort((a, b) => b.date.localeCompare(a.date));
+  return events.sort((a, b) => `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`));
 };
 
 type TabId = 'historique' | 'biens' | 'notes';
@@ -75,6 +85,7 @@ export const ClientDetail: React.FC = () => {
   const navigate = useNavigate();
   const { clients, updateClient, deleteClient } = useClientsStore();
   const { agents, visits } = useAgentsStore();
+  const { calls } = useCallsStore();
   const { properties } = usePropertiesStore();
 
   const [activeTab, setActiveTab] = useState<TabId>('historique');
@@ -95,7 +106,7 @@ export const ClientDetail: React.FC = () => {
   }
 
   const agent = agents.find((a) => a.id === client.agentId);
-  const history = buildHistory(client, visits);
+  const history = buildHistory(client, visits, calls);
   const clientVisits = visits.filter((v) => v.clientId === client.id);
 
   // Matching properties based on client preferences
@@ -251,6 +262,12 @@ export const ClientDetail: React.FC = () => {
                                 })}
                                 {ev.time && ` · ${ev.time}`}
                               </div>
+                              {ev.notes && (
+                                <div className="mt-1.5 text-xs text-gray-600 bg-gray-50 px-2.5 py-1.5 rounded-lg flex gap-1.5">
+                                  <MessageSquare size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
+                                  <span>{ev.notes}</span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
