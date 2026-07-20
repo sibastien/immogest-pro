@@ -82,6 +82,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
     totalFloors: property?.totalFloors,
     parking:     property?.parking     ?? false,
     furnished:   property?.furnished   ?? false,
+    published:   property?.published   ?? false,
     createdAt:   property?.createdAt   ?? new Date().toISOString().split('T')[0],
     featureInput: '',
   });
