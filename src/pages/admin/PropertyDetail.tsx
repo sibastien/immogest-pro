@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, MapPin, Maximize2, BedDouble, Bath, Car, Sofa,
   Building2, Layers, Edit2, Trash2, CheckCircle2, Clock,
-  Phone, Eye, ArrowLeftRight, Calendar,
+  Phone, Eye, EyeOff, ArrowLeftRight, Calendar,
 } from 'lucide-react';
 import { usePropertiesStore } from '../../store/propertiesStore';
 import { useAgentsStore } from '../../store/agentsStore';
@@ -74,6 +74,10 @@ export const PropertyDetail: React.FC = () => {
     updateProperty(property.id, { status });
   };
 
+  const handleTogglePublish = () => {
+    updateProperty(property.id, { published: !property.published });
+  };
+
   const handleDelete = () => {
     if (confirm(`Supprimer le bien "${property.title}" ? Cette action est irréversible.`)) {
       deleteProperty(property.id);
@@ -120,6 +124,16 @@ export const PropertyDetail: React.FC = () => {
             <option value="vendu">Vendu</option>
           </select>
 
+          <button
+            onClick={handleTogglePublish}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${
+              property.published
+                ? 'border border-primary/30 text-primary hover:bg-primary/10'
+                : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+            }`}
+          >
+            {property.published ? <><Eye size={13} /> Publié</> : <><EyeOff size={13} /> Masqué</>}
+          </button>
           <button
             onClick={() => setEditOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-700 hover:bg-gray-50 transition-colors"

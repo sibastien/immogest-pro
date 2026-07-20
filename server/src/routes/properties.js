@@ -28,11 +28,12 @@ function rowFromBody(b) {
     total_floors: b.totalFloors ?? null,
     parking: b.parking == null ? null : (b.parking ? 1 : 0),
     furnished: b.furnished == null ? null : (b.furnished ? 1 : 0),
+    published: b.published ? 1 : 0,
   };
 }
 
 const COLS = `ref, title, deal_type, type, status, price, price_type, surface, rooms, bathrooms,
-  location, address, agent_id, photos, description, features, floor, total_floors, parking, furnished`;
+  location, address, agent_id, photos, description, features, floor, total_floors, parking, furnished, published`;
 
 // GET /api/properties — shared catalogue, visible to every authenticated user.
 router.get('/', (req, res) => {
@@ -56,7 +57,7 @@ router.post('/', (req, res) => {
     INSERT INTO properties (id, ${COLS}, created_at)
     VALUES (@id, @ref, @title, @deal_type, @type, @status, @price, @price_type, @surface, @rooms, @bathrooms,
       @location, @address, @agent_id, @photos, @description, @features, @floor, @total_floors,
-      @parking, @furnished, @created_at)
+      @parking, @furnished, @published, @created_at)
   `).run({ id, ...data, created_at: req.body.createdAt || new Date().toISOString().split('T')[0] });
 
   res.status(201).json(propertyToJSON(db.prepare('SELECT * FROM properties WHERE id = ?').get(id)));
@@ -72,7 +73,7 @@ router.put('/:id', (req, res) => {
     UPDATE properties SET ref=@ref, title=@title, deal_type=@deal_type, type=@type, status=@status, price=@price,
       price_type=@price_type, surface=@surface, rooms=@rooms, bathrooms=@bathrooms, location=@location,
       address=@address, agent_id=@agent_id, photos=@photos, description=@description, features=@features,
-      floor=@floor, total_floors=@total_floors, parking=@parking, furnished=@furnished
+      floor=@floor, total_floors=@total_floors, parking=@parking, furnished=@furnished, published=@published
     WHERE id=@id
   `).run({ id: req.params.id, ...data });
 

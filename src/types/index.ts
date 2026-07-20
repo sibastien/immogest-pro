@@ -27,6 +27,7 @@ export interface Property {
   totalFloors?: number;
   parking?: boolean;
   furnished?: boolean;
+  published: boolean;
 }
 
 export interface Client {

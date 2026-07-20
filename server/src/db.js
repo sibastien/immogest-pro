@@ -175,4 +175,7 @@ if (ensureColumn('transactions', 'deal_type', "deal_type TEXT NOT NULL DEFAULT '
   db.prepare("UPDATE transactions SET deal_type = 'location' WHERE type = 'location_residentielle'").run();
 }
 
+// `published` controls visibility on the external site (read-only consumer of this DB).
+ensureColumn('properties', 'published', 'published INTEGER NOT NULL DEFAULT 0');
+
 module.exports = db;

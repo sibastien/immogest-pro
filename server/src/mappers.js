@@ -123,6 +123,7 @@ function propertyToJSON(row) {
     totalFloors: row.total_floors ?? undefined,
     parking: row.parking == null ? undefined : !!row.parking,
     furnished: row.furnished == null ? undefined : !!row.furnished,
+    published: !!row.published,
   };
 }
 
