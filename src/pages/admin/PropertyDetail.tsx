@@ -155,7 +155,7 @@ export const PropertyDetail: React.FC = () => {
         <div className="col-span-2 space-y-5">
           {/* Photo gallery */}
           {property.photos && property.photos.length > 0 ? (
-            <div className="grid grid-cols-3 gap-2 h-56">
+            <div className="grid grid-cols-3 gap-2 h-96">
               <a
                 href={property.photos[0]}
                 target="_blank"
@@ -176,7 +176,7 @@ export const PropertyDetail: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="h-56 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
+            <div className="h-96 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center">
               <div className="text-center text-gray-300">
                 <Building2 size={40} className="mx-auto mb-2" />
                 <div className="text-sm">Aucune photo</div>
