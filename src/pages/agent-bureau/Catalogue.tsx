@@ -186,10 +186,27 @@ export const AgentBureauCatalogue: React.FC = () => {
               </div>
             </div>
 
-            {/* Photo */}
+            {/* Photos */}
             {selectedProp.photos && selectedProp.photos.length > 0 ? (
-              <div className="h-32 rounded-xl mb-4 overflow-hidden bg-gray-100">
-                <img src={selectedProp.photos[0]} alt={selectedProp.title} className="w-full h-full object-cover" />
+              <div className="grid grid-cols-3 gap-1.5 mb-4 h-40">
+                <a
+                  href={selectedProp.photos[0]}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="col-span-2 rounded-xl overflow-hidden bg-gray-100 block"
+                >
+                  <img src={selectedProp.photos[0]} alt={selectedProp.title} className="w-full h-full object-cover" />
+                </a>
+                <div className="flex flex-col gap-1.5">
+                  {selectedProp.photos.slice(1, 3).map((url, i) => (
+                    <a key={url} href={url} target="_blank" rel="noreferrer" className="flex-1 rounded-xl overflow-hidden bg-gray-100 block">
+                      <img src={url} alt={`${selectedProp.title} ${i + 2}`} className="w-full h-full object-cover" />
+                    </a>
+                  ))}
+                  {Array.from({ length: Math.max(0, 2 - (selectedProp.photos.length - 1)) }).map((_, i) => (
+                    <div key={`ph-${i}`} className="flex-1 bg-gray-100 rounded-xl" />
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl mb-4 flex items-center justify-center">
