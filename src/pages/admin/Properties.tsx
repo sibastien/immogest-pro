@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Plus, Search, LayoutGrid, List, X, MapPin, Maximize2,
   BedDouble, Bath, Building2,
@@ -41,6 +41,8 @@ function formatPrice(price: number, priceType: 'vente' | 'mois'): string {
 
 export const AdminProperties: React.FC = () => {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const basePath = `/${pathname.split('/')[1]}/biens`;
   const { properties, filters, setFilters, resetFilters } = usePropertiesStore();
   const { agents } = useAgentsStore();
 
@@ -71,11 +73,11 @@ export const AdminProperties: React.FC = () => {
     vendu:          properties.filter((p) => p.status === 'vendu').length,
   };
 
-  const handleCardClick = (id: string) => navigate(`/admin/biens/${id}`);
+  const handleCardClick = (id: string) => navigate(`${basePath}/${id}`);
 
   const handleFormSuccess = (id: string) => {
     setDrawerOpen(false);
-    navigate(`/admin/biens/${id}`);
+    navigate(`${basePath}/${id}`);
   };
 
   return (

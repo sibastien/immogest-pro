@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   ArrowLeft, MapPin, Maximize2, BedDouble, Bath, Car, Sofa,
   Building2, Layers, Edit2, Trash2, CheckCircle2, Clock,
@@ -45,6 +45,8 @@ type TabId = 'visites' | 'transactions' | 'notes';
 export const PropertyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const rolePrefix = `/${pathname.split('/')[1]}`;
   const { properties, updateProperty, deleteProperty } = usePropertiesStore();
   const { agents, visits, transactions } = useAgentsStore();
   const { clients } = useClientsStore();
@@ -59,7 +61,7 @@ export const PropertyDetail: React.FC = () => {
       <div className="flex flex-col items-center justify-center h-64 text-gray-400">
         <Building2 size={36} className="mb-3 opacity-30" />
         <p>Bien introuvable</p>
-        <button onClick={() => navigate('/admin/biens')} className="mt-3 text-primary text-sm hover:underline">
+        <button onClick={() => navigate(`${rolePrefix}/biens`)} className="mt-3 text-primary text-sm hover:underline">
           ← Retour à la liste
         </button>
       </div>
@@ -81,7 +83,7 @@ export const PropertyDetail: React.FC = () => {
   const handleDelete = () => {
     if (confirm(`Supprimer le bien "${property.title}" ? Cette action est irréversible.`)) {
       deleteProperty(property.id);
-      navigate('/admin/biens');
+      navigate(`${rolePrefix}/biens`);
     }
   };
 
@@ -97,7 +99,7 @@ export const PropertyDetail: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate('/admin/biens')}
+            onClick={() => navigate(`${rolePrefix}/biens`)}
             className="w-8 h-8 flex items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
           >
             <ArrowLeft size={15} className="text-gray-500" />
@@ -430,7 +432,11 @@ export const PropertyDetail: React.FC = () => {
             <div className="text-xs font-medium text-gray-500 mb-3">Actions rapides</div>
             <div className="space-y-2">
               <button
-                onClick={() => navigate(`/admin/agenda?property=${property.id}`)}
+                onClick={() => navigate(
+                  rolePrefix === '/agent-terrain'
+                    ? `${rolePrefix}/planifier?property=${property.id}`
+                    : `${rolePrefix}/agenda?property=${property.id}`
+                )}
                 className="w-full flex items-center gap-2 px-3 py-2 bg-primary text-white text-xs rounded-lg hover:bg-primary/90 transition-colors"
               >
                 <Calendar size={13} /> Planifier une visite
@@ -442,7 +448,7 @@ export const PropertyDetail: React.FC = () => {
                 <Edit2 size={13} /> Modifier le bien
               </button>
               <button
-                onClick={() => navigate('/admin/biens')}
+                onClick={() => navigate(`${rolePrefix}/biens`)}
                 className="w-full flex items-center gap-2 px-3 py-2 border border-gray-200 text-xs text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <Eye size={13} /> Voir dans le catalogue

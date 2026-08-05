@@ -2,13 +2,14 @@ import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { MobileNav } from './MobileNav';
 import { Bell, LogOut } from 'lucide-react';
-import { Home, MapPin, Phone, Users, TrendingUp } from 'lucide-react';
+import { Home, MapPin, Phone, Users, TrendingUp, Building2 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { Avatar } from '../ui/Avatar';
 
 const NAV_ITEMS = [
   { label: 'Accueil', path: '/agent-terrain', icon: Home },
   { label: 'Visites', path: '/agent-terrain/visites', icon: MapPin },
+  { label: 'Biens', path: '/agent-terrain/biens', icon: Building2 },
   { label: 'Appels', path: '/agent-terrain/appels', icon: Phone },
   { label: 'Clients', path: '/agent-terrain/clients', icon: Users },
   { label: 'Perf.', path: '/agent-terrain/performance', icon: TrendingUp },
