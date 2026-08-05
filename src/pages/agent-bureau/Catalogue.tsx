@@ -194,17 +194,17 @@ export const AgentBureauCatalogue: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setLightboxIndex(0)}
-                  className="col-span-2 rounded-xl overflow-hidden bg-gray-100 block"
+                  className="col-span-2 w-full h-full rounded-xl overflow-hidden bg-gray-100 block p-0"
                 >
                   <img src={selectedProp.photos[0]} alt={selectedProp.title} className="w-full h-full object-cover" />
                 </button>
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1.5 min-h-0">
                   {selectedProp.photos.slice(1, 3).map((url, i) => (
                     <button
                       type="button"
                       key={url}
                       onClick={() => setLightboxIndex(i + 1)}
-                      className="flex-1 rounded-xl overflow-hidden bg-gray-100 block"
+                      className="flex-1 min-h-0 w-full rounded-xl overflow-hidden bg-gray-100 block p-0"
                     >
                       <img src={url} alt={`${selectedProp.title} ${i + 2}`} className="w-full h-full object-cover" />
                     </button>

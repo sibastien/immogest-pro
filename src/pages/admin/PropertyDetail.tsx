@@ -163,17 +163,17 @@ export const PropertyDetail: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setLightboxIndex(0)}
-                className="col-span-2 rounded-xl overflow-hidden bg-gray-100 block"
+                className="col-span-2 w-full h-full rounded-xl overflow-hidden bg-gray-100 block p-0"
               >
                 <img src={property.photos[0]} alt={property.title} className="w-full h-full object-cover" />
               </button>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 min-h-0">
                 {property.photos.slice(1, 4).map((url, i) => (
                   <button
                     type="button"
                     key={url}
                     onClick={() => setLightboxIndex(i + 1)}
-                    className="flex-1 rounded-xl overflow-hidden bg-gray-100 block"
+                    className="flex-1 min-h-0 w-full rounded-xl overflow-hidden bg-gray-100 block p-0"
                   >
                     <img src={url} alt={`${property.title} ${i + 2}`} className="w-full h-full object-cover" />
                   </button>
@@ -194,9 +194,9 @@ export const PropertyDetail: React.FC = () => {
 
           {/* Description */}
           {property.description && (
-            <Card>
+            <Card className="mt-1">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Description</h3>
-              <p className="text-sm text-gray-600 leading-6">{property.description}</p>
+              <p className="text-sm text-gray-600 leading-6 whitespace-pre-line">{property.description}</p>
             </Card>
           )}
 
