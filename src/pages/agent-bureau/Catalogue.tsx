@@ -4,6 +4,7 @@ import { Search, MapPin, Maximize2, BedDouble, Phone, Share2, X, Pencil, Trash2 
 import { usePropertiesStore } from '../../store/propertiesStore';
 import { Badge } from '../../components/ui/Badge';
 import { PropertyForm } from '../admin/PropertyForm';
+import { Lightbox } from '../../components/ui/Lightbox';
 import type { Property, PropertyType, PropertyStatus } from '../../types';
 
 const STATUS_LABELS: Record<PropertyStatus, string> = {
@@ -35,6 +36,7 @@ export const AgentBureauCatalogue: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<PropertyType | ''>('');
   const [selected, setSelected]     = useState<string | null>(null);
   const [editing, setEditing]       = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   // Preselect a bien when arriving from a client match (?bien=ID).
   useEffect(() => {
@@ -189,19 +191,23 @@ export const AgentBureauCatalogue: React.FC = () => {
             {/* Photos */}
             {selectedProp.photos && selectedProp.photos.length > 0 ? (
               <div className="grid grid-cols-3 gap-1.5 mb-4 h-40">
-                <a
-                  href={selectedProp.photos[0]}
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  type="button"
+                  onClick={() => setLightboxIndex(0)}
                   className="col-span-2 rounded-xl overflow-hidden bg-gray-100 block"
                 >
                   <img src={selectedProp.photos[0]} alt={selectedProp.title} className="w-full h-full object-cover" />
-                </a>
+                </button>
                 <div className="flex flex-col gap-1.5">
                   {selectedProp.photos.slice(1, 3).map((url, i) => (
-                    <a key={url} href={url} target="_blank" rel="noreferrer" className="flex-1 rounded-xl overflow-hidden bg-gray-100 block">
+                    <button
+                      type="button"
+                      key={url}
+                      onClick={() => setLightboxIndex(i + 1)}
+                      className="flex-1 rounded-xl overflow-hidden bg-gray-100 block"
+                    >
                       <img src={url} alt={`${selectedProp.title} ${i + 2}`} className="w-full h-full object-cover" />
-                    </a>
+                    </button>
                   ))}
                   {Array.from({ length: Math.max(0, 2 - (selectedProp.photos.length - 1)) }).map((_, i) => (
                     <div key={`ph-${i}`} className="flex-1 bg-gray-100 rounded-xl" />
@@ -292,6 +298,15 @@ export const AgentBureauCatalogue: React.FC = () => {
           </div>
         )}
       </div>
+
+      {lightboxIndex !== null && selectedProp?.photos && (
+        <Lightbox
+          photos={selectedProp.photos}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onIndexChange={setLightboxIndex}
+        />
+      )}
     </div>
   );
 };

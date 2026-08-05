@@ -12,6 +12,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
 import { Card } from '../../components/ui/Card';
 import { Drawer } from '../../components/ui/Drawer';
+import { Lightbox } from '../../components/ui/Lightbox';
 import { PhoneReveal } from '../../components/shared/PhoneReveal';
 import { PropertyForm } from './PropertyForm';
 import type { PropertyType, PropertyStatus } from '../../types';
@@ -53,6 +54,7 @@ export const PropertyDetail: React.FC = () => {
 
   const [activeTab, setActiveTab]   = useState<TabId>('visites');
   const [editOpen, setEditOpen]     = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const property = properties.find((p) => p.id === id);
 
@@ -158,19 +160,23 @@ export const PropertyDetail: React.FC = () => {
           {/* Photo gallery */}
           {property.photos && property.photos.length > 0 ? (
             <div className="grid grid-cols-3 gap-2 h-[560px]">
-              <a
-                href={property.photos[0]}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={() => setLightboxIndex(0)}
                 className="col-span-2 rounded-xl overflow-hidden bg-gray-100 block"
               >
                 <img src={property.photos[0]} alt={property.title} className="w-full h-full object-cover" />
-              </a>
+              </button>
               <div className="flex flex-col gap-2">
                 {property.photos.slice(1, 4).map((url, i) => (
-                  <a key={url} href={url} target="_blank" rel="noreferrer" className="flex-1 rounded-xl overflow-hidden bg-gray-100 block">
+                  <button
+                    type="button"
+                    key={url}
+                    onClick={() => setLightboxIndex(i + 1)}
+                    className="flex-1 rounded-xl overflow-hidden bg-gray-100 block"
+                  >
                     <img src={url} alt={`${property.title} ${i + 2}`} className="w-full h-full object-cover" />
-                  </a>
+                  </button>
                 ))}
                 {Array.from({ length: Math.max(0, 3 - (property.photos.length - 1)) }).map((_, i) => (
                   <div key={`ph-${i}`} className="flex-1 bg-gray-100 rounded-xl" />
@@ -483,6 +489,15 @@ export const PropertyDetail: React.FC = () => {
           onCancel={() => setEditOpen(false)}
         />
       </Drawer>
+
+      {lightboxIndex !== null && property.photos && (
+        <Lightbox
+          photos={property.photos}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onIndexChange={setLightboxIndex}
+        />
+      )}
     </div>
   );
 };
