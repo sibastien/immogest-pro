@@ -4,45 +4,48 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-### Frontend (root)
+### Unified (Root)
 ```bash
+npm run install:all # Install dependencies for root, backend, and frontend
+npm run dev         # Run both backend & frontend concurrently
+npm run seed        # Seed the SQLite database with initial admin credentials
+npm run build       # Build the frontend for production
+```
+
+### Frontend (frontend/)
+```bash
+cd frontend
 npm run dev        # Start Vite dev server (port 5173, proxies /api → localhost:4000)
 npm run build      # TypeScript check + Vite production build
 npm run lint       # Run oxlint
 npm run preview    # Preview the production build
 ```
 
-### Backend (server/)
+### Backend (backend/)
 ```bash
-cd server
-npm run dev        # Start Express with --watch (auto-restart on change)
+cd backend
+npm run dev        # Start Express with --watch (auto-restart on change, port 4000)
 npm run start      # Production start
-npm run seed       # Seed the SQLite database with demo users/data
+npm run seed       # Seed the SQLite database with initial admin credentials
 ```
 
 ### First-time setup
 ```bash
-# Backend
-cd server
-cp .env.example .env   # Fill in JWT_SECRET at minimum
-npm install
-npm run seed
-npm run dev
-
-# Frontend (separate terminal)
-cd ..
-npm install
-npm run dev
+# From root directory:
+npm run install:all
+npm run seed       # Note down the generated admin email and password!
+npm run dev        # Starts both backend (4000) and frontend (5173)
 ```
 
 ## Architecture
 
 This is a French real-estate agency management app (ImmoGest Pro) with two separate packages:
 
-- **Root** — React 19 + TypeScript SPA (Vite, Tailwind CSS v4, Zustand, React Router v7)
-- **server/** — Express REST API (CommonJS, better-sqlite3, JWT auth, multer for file uploads)
+- **frontend/** — React 19 + TypeScript SPA (Vite, Tailwind CSS v4, Zustand, React Router v7)
+- **backend/** — Express REST API (CommonJS, better-sqlite3, JWT auth, multer for file uploads)
 
-In development, Vite proxies all `/api` requests to `http://localhost:4000` (`vite.config.ts`).
+In development, Vite proxies all `/api` requests to `http://localhost:4000` (`frontend/vite.config.ts`).
+
 
 ### Role-based access
 
