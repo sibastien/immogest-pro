@@ -12,7 +12,10 @@ type BadgeVariant =
   | 'urgent'
   | 'info'
   | 'gray'
-  | 'purple';
+  | 'purple'
+  | 'nouveau'
+  | 'en_cours'
+  | 'brand';
 
 const VARIANT_CLASSES: Record<BadgeVariant, string> = {
   disponible: 'bg-success-light text-success',
@@ -27,6 +30,9 @@ const VARIANT_CLASSES: Record<BadgeVariant, string> = {
   urgent: 'bg-danger-light text-danger',
   purple: 'bg-purple-light text-purple',
   gray: 'bg-gray-100 text-gray-600',
+  nouveau: 'bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]',
+  en_cours: 'bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]',
+  brand: 'bg-[#FEF9E7] text-[#A16207] border border-[#F5C518]/40',
 };
 
 const VARIANT_LABELS: Partial<Record<BadgeVariant, string>> = {
@@ -38,6 +44,8 @@ const VARIANT_LABELS: Partial<Record<BadgeVariant, string>> = {
   a_relancer: 'À relancer',
   compromis: 'Compromis',
   cloture: 'Clôturé',
+  nouveau: 'Nouveau',
+  en_cours: 'En cours',
 };
 
 interface BadgeProps {

@@ -145,7 +145,7 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions, onMenu
       <div ref={searchRef} className="relative">
         <button
           onClick={() => { setSearchOpen(true); setTimeout(() => inputRef.current?.focus(), 50); }}
-          className="flex items-center gap-2 px-2 md:px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-400 hover:border-primary/40 hover:bg-primary-light transition-colors md:min-w-[180px]"
+          className="flex items-center gap-2 px-2 md:px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-400 hover:border-[#F5C518] hover:bg-[#FEF9E7]/60 hover:text-gray-600 transition-colors md:min-w-[180px]"
         >
           <Search size={14} />
           <span className="hidden md:inline flex-1 text-left">Rechercher…</span>
@@ -183,7 +183,7 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions, onMenu
                     <button
                       key={`${r.kind}-${r.id}`}
                       onClick={() => handleResultClick(r)}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-[#FEF9E7]/40 transition-colors text-left"
                     >
                       <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                         <Icon size={14} className="text-gray-500" />
@@ -236,7 +236,7 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions, onMenu
               {notifs.map((n) => (
                 <div
                   key={n.id}
-                  className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${n.unread ? 'bg-primary-light/30' : ''}`}
+                  className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${n.unread ? 'bg-[#FEF9E7]/40' : ''}`}
                   onClick={() => setNotifs((prev) => prev.map((x) => x.id === n.id ? { ...x, unread: false } : x))}
                 >
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-1.5 ${n.unread ? n.dot : 'bg-gray-200'}`} />
@@ -278,9 +278,9 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions, onMenu
                   <div className="text-xs text-gray-400 truncate">{user?.email}</div>
                 </div>
               </div>
-              <div className="mt-2.5 flex items-center gap-1.5 px-2.5 py-1 bg-primary-light rounded-lg w-fit">
-                <Shield size={11} className="text-primary" />
-                <span className="text-xs font-medium text-primary">{ROLE_LABELS[user?.role ?? ''] ?? user?.role}</span>
+              <div className="mt-2.5 flex items-center gap-1.5 px-2.5 py-1 bg-[#FEF9E7] text-amber-800 border border-[#F5C518]/30 rounded-lg w-fit">
+                <Shield size={11} className="text-amber-600" />
+                <span className="text-xs font-semibold">{ROLE_LABELS[user?.role ?? ''] ?? user?.role}</span>
               </div>
             </div>
 

@@ -48,8 +48,8 @@ export const AdminLayout: React.FC = () => {
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar
         navItems={NAV_ITEMS}
-        accentColor="blue"
-        logoSubtitle="Administration"
+        accentColor="gold"
+        logoSubtitle="CRM IMMOBILIER"
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />

@@ -4,6 +4,7 @@ import { LogOut, Settings, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { Avatar } from '../ui/Avatar';
+import { Logo } from '../ui/Logo';
 
 export interface NavItem {
   label: string;
@@ -14,37 +15,46 @@ export interface NavItem {
 
 interface SidebarProps {
   navItems: NavItem[];
-  accentColor?: 'blue' | 'purple';
+  accentColor?: 'gold' | 'blue' | 'purple';
   logoSubtitle?: string;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
 }
 
 const ACCENT = {
+  gold: {
+    active: 'border border-[#F5C518]/70 bg-[#F5C518]/12 text-[#F5C518] font-medium shadow-[0_0_15px_rgba(245,197,24,0.1)]',
+    hover: 'hover:bg-white/5 hover:text-white text-[#94A3B8]',
+    iconActive: 'text-[#F5C518]',
+    iconInactive: 'text-[#94A3B8]',
+    badge: 'bg-[#F5C518] text-[#14161F] font-bold',
+  },
   blue: {
-    active: 'bg-primary-light text-primary',
-    hover: 'hover:bg-gray-100',
-    dot: 'bg-primary',
-    border: 'border-primary',
+    active: 'border border-[#F5C518]/70 bg-[#F5C518]/12 text-[#F5C518] font-medium shadow-[0_0_15px_rgba(245,197,24,0.1)]',
+    hover: 'hover:bg-white/5 hover:text-white text-[#94A3B8]',
+    iconActive: 'text-[#F5C518]',
+    iconInactive: 'text-[#94A3B8]',
+    badge: 'bg-[#F5C518] text-[#14161F] font-bold',
   },
   purple: {
-    active: 'bg-purple-light text-purple',
-    hover: 'hover:bg-gray-100',
-    dot: 'bg-purple',
-    border: 'border-purple',
+    active: 'border border-[#A855F7]/70 bg-[#A855F7]/12 text-[#C084FC] font-medium shadow-[0_0_15px_rgba(168,85,247,0.1)]',
+    hover: 'hover:bg-white/5 hover:text-white text-[#94A3B8]',
+    iconActive: 'text-[#C084FC]',
+    iconInactive: 'text-[#94A3B8]',
+    badge: 'bg-[#A855F7] text-white font-bold',
   },
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({
   navItems,
-  accentColor = 'blue',
-  logoSubtitle = 'Gestion immobilière',
+  accentColor = 'gold',
+  logoSubtitle = 'CRM IMMOBILIER',
   mobileOpen = false,
   onMobileClose,
 }) => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
-  const colors = ACCENT[accentColor];
+  const colors = ACCENT[accentColor] || ACCENT.gold;
 
   const handleLogout = () => {
     logout();
@@ -52,22 +62,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const panel = (
-    <aside className="w-60 h-full bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+    <aside className="w-64 h-full bg-[#14161F] border-r border-[#23273A] flex flex-col flex-shrink-0 select-none">
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-gray-100 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className={`w-8 h-8 rounded-lg ${colors.dot} flex items-center justify-center`}>
-            <span className="text-white text-sm font-bold">IG</span>
-          </div>
-          <div>
-            <div className="text-sm font-semibold text-gray-900">ImmoGest Pro</div>
-            <div className="text-xs text-gray-400">{logoSubtitle}</div>
-          </div>
-        </div>
+      <div className="px-5 py-5 border-b border-[#23273A] flex items-center justify-between">
+        <Logo size="md" variant="dark" subtitle={logoSubtitle} />
         {onMobileClose && (
           <button
             onClick={onMobileClose}
-            className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-400"
+            className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
           >
             <X size={18} />
           </button>
@@ -75,7 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         {navItems.map((item) => (
           <NavLink
             key={item.path}
@@ -83,28 +85,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClick={onMobileClose}
             className={({ isActive }) =>
               [
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                isActive ? colors.active : `text-gray-600 ${colors.hover}`,
+                'group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-all border border-transparent',
+                isActive ? colors.active : colors.hover,
               ].join(' ')
             }
           >
-            <item.icon size={18} className="flex-shrink-0" />
-            <span className="flex-1">{item.label}</span>
-            {item.badge !== undefined && item.badge > 0 && (
-              <span className="bg-danger text-white text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center">
-                {item.badge > 9 ? '9+' : item.badge}
-              </span>
+            {({ isActive }) => (
+              <>
+                <item.icon
+                  size={18}
+                  className={`flex-shrink-0 transition-colors ${
+                    isActive ? colors.iconActive : colors.iconInactive
+                  } group-hover:text-white`}
+                />
+                <span className="flex-1 font-medium">{item.label}</span>
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className={`${colors.badge} text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center`}>
+                    {item.badge > 9 ? '9+' : item.badge}
+                  </span>
+                )}
+              </>
             )}
           </NavLink>
         ))}
       </nav>
 
-      {/* Footer */}
-      <div className="px-3 py-3 border-t border-gray-100 space-y-0.5">
+      {/* Footer Actions */}
+      <div className="px-3 py-2 border-t border-[#23273A] space-y-0.5">
         {user?.role === 'admin' && (
           <button
             onClick={() => { navigate('/admin/parametres'); onMobileClose?.(); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors"
+            className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors"
           >
             <Settings size={18} />
             <span>Paramètres</span>
@@ -112,19 +123,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-danger-light hover:text-danger transition-colors"
+          className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm text-[#94A3B8] hover:text-red-400 hover:bg-red-500/10 transition-colors"
         >
           <LogOut size={18} />
           <span>Déconnexion</span>
         </button>
       </div>
 
-      {/* User info */}
-      <div className="px-4 py-3 border-t border-gray-100 flex items-center gap-3">
-        <Avatar initials={user?.initials ?? '?'} size="sm" />
-        <div className="min-w-0 flex-1">
-          <div className="text-sm font-medium text-gray-900 truncate">{user?.name}</div>
-          <div className="text-xs text-gray-400 truncate">{user?.email}</div>
+      {/* User info card */}
+      <div className="p-3 border-t border-[#23273A]">
+        <div className="bg-[#1B1E2C] border border-[#23273A] rounded-xl px-3.5 py-2.5 flex items-center gap-3">
+          <Avatar initials={user?.initials ?? '?'} size="sm" />
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold text-white truncate">{user?.name}</div>
+            <div className="text-xs text-[#94A3B8] truncate">{user?.email}</div>
+          </div>
         </div>
       </div>
     </aside>

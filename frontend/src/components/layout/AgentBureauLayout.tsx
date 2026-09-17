@@ -40,7 +40,7 @@ export const AgentBureauLayout: React.FC = () => {
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar
         navItems={navItems}
-        accentColor="blue"
+        accentColor="gold"
         logoSubtitle="Agent bureau"
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
