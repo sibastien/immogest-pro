@@ -6,6 +6,7 @@ import { useClientsStore } from '../../store/clientsStore';
 import { useAuthStore } from '../../store/authStore';
 import { Badge } from '../../components/ui/Badge';
 import { Avatar } from '../../components/ui/Avatar';
+import { PeriodTracker } from '../../components/transactions/PeriodTracker';
 import type { Transaction } from '../../types';
 
 type Stage = Transaction['stage'];
@@ -141,6 +142,9 @@ export const AdminTransactions: React.FC = () => {
           <div className="text-xl font-bold text-purple">{clôturées}</div>
         </div>
       </div>
+
+      {/* Period Tracker Engine */}
+      <PeriodTracker transactions={transactions} />
 
       {/* Filters */}
       <div className="flex items-center gap-3">
