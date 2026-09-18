@@ -1,4 +1,4 @@
-export type Role = 'admin' | 'coordinatrice' | 'agent_bureau' | 'agent_terrain' | 'client';
+export type Role = 'superadmin' | 'admin' | 'coordinatrice' | 'agent_bureau' | 'agent_terrain' | 'client';
 
 export type PropertyType = 'villa' | 'appartement' | 'maison' | 'commercial' | 'terrain';
 export type TransactionType = 'vente' | 'location';

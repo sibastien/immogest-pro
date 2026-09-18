@@ -31,6 +31,9 @@ import { AdminRapports } from '../pages/admin/Rapports';
 import { AdminAppels } from '../pages/admin/Appels';
 import { AdminSettings } from '../pages/admin/Settings';
 
+// SuperAdmin
+import { SuperAdminDashboard } from '../pages/superadmin/Dashboard';
+
 // Coordinatrice
 import { CoordinatriceHub } from '../pages/coordinatrice/Hub';
 import { CoordinatriceValidateCR } from '../pages/coordinatrice/ValidateCR';
@@ -91,8 +94,14 @@ const RequireAuth: React.FC<{ allowedRoles?: string[] }> = ({ allowedRoles }) =>
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to={dashboardPathByRole[user.role]} replace />;
+  const isSuper = user.role === 'superadmin' || (user.role === 'admin' && user.tenantId === 'default');
+
+  if (allowedRoles) {
+    if (allowedRoles.includes('superadmin') && isSuper) {
+      // SuperAdmin access granted
+    } else if (!allowedRoles.includes(user.role)) {
+      return <Navigate to={dashboardPathByRole[user.role]} replace />;
+    }
   }
 
   return <Outlet />;
@@ -102,6 +111,7 @@ const RequireAuth: React.FC<{ allowedRoles?: string[] }> = ({ allowedRoles }) =>
 const RootRedirect: React.FC = () => {
   const { isAuthenticated, user } = useAuthStore();
   if (!isAuthenticated || !user) return <Navigate to="/login" replace />;
+  if (user.role === 'superadmin') return <Navigate to="/superadmin" replace />;
   return <Navigate to={dashboardPathByRole[user.role]} replace />;
 };
 
@@ -115,9 +125,20 @@ export const router = createBrowserRouter([
     element: <RootRedirect />,
   },
 
+  // SUPER-ADMIN (SaaS Owner Console)
+  {
+    element: <RequireAuth allowedRoles={['superadmin']} />,
+    children: [
+      {
+        path: '/superadmin',
+        element: <SuperAdminDashboard />,
+      },
+    ],
+  },
+
   // ADMIN
   {
-    element: <RequireAuth allowedRoles={['admin']} />,
+    element: <RequireAuth allowedRoles={['admin', 'superadmin']} />,
     children: [
       {
         path: '/admin',

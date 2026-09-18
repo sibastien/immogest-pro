@@ -19,6 +19,7 @@ const ROLE_OPTIONS: { value: Role; label: string }[] = [
 ];
 
 const ROLE_LABELS: Record<Role, string> = {
+  superadmin: 'Super-Administrateur',
   admin: 'Administrateur',
   coordinatrice: 'Coordinatrice',
   agent_bureau: 'Agent bureau',

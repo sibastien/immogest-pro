@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, Settings, X } from 'lucide-react';
+import { LogOut, Settings, X, Shield } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { Avatar } from '../ui/Avatar';
@@ -118,6 +118,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Footer Actions */}
       <div className="px-3 py-2 space-y-0.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        {(user?.role === 'superadmin' || (user?.role === 'admin' && tenant?.id === 'default')) && (
+          <button
+            onClick={() => { navigate('/superadmin'); onMobileClose?.(); }}
+            className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-xs font-bold text-amber-300 bg-white/10 hover:bg-white/15 hover:text-white transition-all mb-1 border border-amber-400/20"
+          >
+            <Shield size={16} className="text-amber-400" />
+            <span>Console Super-Admin</span>
+          </button>
+        )}
         {user?.role === 'admin' && (
           <button
           onClick={() => { navigate('/admin/parametres'); onMobileClose?.(); }}

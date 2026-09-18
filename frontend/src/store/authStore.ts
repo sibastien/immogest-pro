@@ -24,6 +24,7 @@ interface AuthState {
 }
 
 export const dashboardPathByRole: Record<Role, string> = {
+  superadmin: '/superadmin',
   admin: '/admin',
   coordinatrice: '/coordinatrice',
   agent_bureau: '/agent-bureau',
