@@ -23,24 +23,24 @@ interface SidebarProps {
 
 const ACCENT = {
   gold: {
-    active: 'border border-[#F5C518]/70 bg-[#F5C518]/12 text-[#F5C518] font-medium shadow-[0_0_15px_rgba(245,197,24,0.1)]',
-    hover: 'hover:bg-white/5 hover:text-white text-[#94A3B8]',
-    iconActive: 'text-[#F5C518]',
-    iconInactive: 'text-[#94A3B8]',
-    badge: 'bg-[#F5C518] text-[#14161F] font-bold',
+    active: 'border border-white/20 bg-white/15 text-white font-semibold shadow-[0_0_20px_rgba(30,127,196,0.25)]',
+    hover: 'hover:bg-white/8 hover:text-white text-[#93C5FD]',
+    iconActive: 'text-white',
+    iconInactive: 'text-[#93C5FD]',
+    badge: 'bg-[#F5C518] text-[#0D3B6E] font-bold',
   },
   blue: {
-    active: 'border border-[#F5C518]/70 bg-[#F5C518]/12 text-[#F5C518] font-medium shadow-[0_0_15px_rgba(245,197,24,0.1)]',
-    hover: 'hover:bg-white/5 hover:text-white text-[#94A3B8]',
-    iconActive: 'text-[#F5C518]',
-    iconInactive: 'text-[#94A3B8]',
-    badge: 'bg-[#F5C518] text-[#14161F] font-bold',
+    active: 'border border-white/20 bg-white/15 text-white font-semibold shadow-[0_0_20px_rgba(30,127,196,0.25)]',
+    hover: 'hover:bg-white/8 hover:text-white text-[#93C5FD]',
+    iconActive: 'text-white',
+    iconInactive: 'text-[#93C5FD]',
+    badge: 'bg-[#F5C518] text-[#0D3B6E] font-bold',
   },
   purple: {
-    active: 'border border-[#A855F7]/70 bg-[#A855F7]/12 text-[#C084FC] font-medium shadow-[0_0_15px_rgba(168,85,247,0.1)]',
-    hover: 'hover:bg-white/5 hover:text-white text-[#94A3B8]',
-    iconActive: 'text-[#C084FC]',
-    iconInactive: 'text-[#94A3B8]',
+    active: 'border border-white/20 bg-white/15 text-white font-semibold shadow-[0_0_20px_rgba(168,85,247,0.2)]',
+    hover: 'hover:bg-white/8 hover:text-white text-[#93C5FD]',
+    iconActive: 'text-white',
+    iconInactive: 'text-[#93C5FD]',
     badge: 'bg-[#A855F7] text-white font-bold',
   },
 };
@@ -62,9 +62,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const panel = (
-    <aside className="w-64 h-full bg-[#14161F] border-r border-[#23273A] flex flex-col flex-shrink-0 select-none">
+    <aside
+      className="w-64 h-full flex flex-col flex-shrink-0 select-none"
+      style={{
+        background: 'linear-gradient(180deg, #0D3B6E 0%, #0F4785 60%, #185FA5 100%)',
+        borderRight: '1px solid rgba(255,255,255,0.08)',
+      }}
+    >
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-[#23273A] flex items-center justify-between">
+      <div className="px-5 py-5 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <Logo size="md" variant="dark" subtitle={logoSubtitle} />
         {onMobileClose && (
           <button
@@ -111,19 +117,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       {/* Footer Actions */}
-      <div className="px-3 py-2 border-t border-[#23273A] space-y-0.5">
+      <div className="px-3 py-2 space-y-0.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
         {user?.role === 'admin' && (
           <button
-            onClick={() => { navigate('/admin/parametres'); onMobileClose?.(); }}
-            className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm text-[#94A3B8] hover:text-white hover:bg-white/5 transition-colors"
-          >
+          onClick={() => { navigate('/admin/parametres'); onMobileClose?.(); }}
+          className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"
+        >
             <Settings size={18} />
             <span>Paramètres</span>
           </button>
         )}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm text-[#94A3B8] hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm text-blue-200 hover:text-red-300 hover:bg-red-500/15 transition-colors"
         >
           <LogOut size={18} />
           <span>Déconnexion</span>
@@ -131,8 +137,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* User info card */}
-      <div className="p-3 border-t border-[#23273A]">
-        <div className="bg-[#1B1E2C] border border-[#23273A] rounded-xl px-3.5 py-2.5 flex items-center gap-3">
+      <div className="p-3" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div
+          className="rounded-xl px-3.5 py-2.5 flex items-center gap-3"
+          style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}
+        >
           <Avatar initials={user?.initials ?? '?'} size="sm" />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-white truncate">{user?.name}</div>

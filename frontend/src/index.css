@@ -1,14 +1,23 @@
 @import "tailwindcss";
 @theme {
+  /* ── Brand (yellow) ── */
   --color-brand: #F5C518;
   --color-brand-hover: #E5B510;
   --color-brand-light: #FEF9E7;
-  --color-sidebar-bg: #14161F;
-  --color-sidebar-surface: #1B1E2C;
-  --color-sidebar-border: #23273A;
-  --color-sidebar-text: #94A3B8;
-  --color-primary: #185FA5;
-  --color-primary-light: #E6F1FB;
+
+  /* ── Sidebar — deep navy blue ── */
+  --color-sidebar-bg: #0D3B6E;
+  --color-sidebar-surface: #0F4785;
+  --color-sidebar-border: #1A5FA8;
+  --color-sidebar-text: #93C5FD;
+
+  /* ── Primary — sky blue ── */
+  --color-primary: #1E7FC4;
+  --color-primary-dark: #185FA5;
+  --color-primary-darker: #0D3B6E;
+  --color-primary-light: #DBEAFE;
+
+  /* ── Semantic ── */
   --color-success: #16A34A;
   --color-success-light: #DCFCE7;
   --color-warning: #D97706;
@@ -17,6 +26,8 @@
   --color-danger-light: #FEE2E2;
   --color-purple: #7C3AED;
   --color-purple-light: #EDE9FE;
+
+  /* ── Grays ── */
   --color-gray-50: #F9FAFB;
   --color-gray-100: #F3F4F6;
   --color-gray-200: #E5E7EB;
@@ -27,6 +38,7 @@
   --color-gray-700: #374151;
   --color-gray-800: #1F2937;
   --color-gray-900: #111827;
+
   --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
