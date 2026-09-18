@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Building2, Users, CalendarDays, ArrowRight,
   BarChart3, Activity, Bed, Bath, Square, Home, Heart,
+  Plus, ArrowUpRight, CheckCircle2,
 } from 'lucide-react';
 import { Card, CardHeader } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -27,14 +28,51 @@ export const AdminDashboard: React.FC = () => {
 
   const [chartView, setChartView] = useState<'visites' | 'ca'>('visites');
 
-  const activeProperties = properties.filter((p) => p.status === 'disponible').length;
-  const activeClients    = clients.filter((c) => c.status === 'actif').length;
+  // Ensure fresh data on dashboard load
+  useEffect(() => {
+    usePropertiesStore.getState().load();
+    useClientsStore.getState().load();
+    const a = useAgentsStore.getState();
+    a.loadAgents();
+    a.loadVisits();
+    a.loadTransactions();
+  }, []);
 
-  // Live aggregates (zero until the agency adds data)
-  const closedTx   = transactions.filter((t) => t.stage === 'cloture');
-  const caRealise  = closedTx.reduce((s, t) => s + t.amount, 0);
+  // ─── Live Data from Stores ──────────────────────────────────────────────────
+  // Biens en ligne (status 'disponible')
+  const activeProperties = properties.filter((p) => p.status === 'disponible').length;
+  // Recent properties added in last 30 days
+  const recentPropsAdded = properties.filter((p) => {
+    const d = new Date(p.createdAt);
+    return !isNaN(d.getTime()) && (Date.now() - d.getTime()) <= 30 * 24 * 60 * 60 * 1000;
+  }).length;
+
+  // Total clients & new clients this month
+  const totalClients = clients.length;
+  const newClientsThisMonth = clients.filter((c) => {
+    const d = new Date(c.createdAt);
+    return !isNaN(d.getTime()) && (Date.now() - d.getTime()) <= 30 * 24 * 60 * 60 * 1000;
+  }).length;
+
+  // Visites totales & aujourd'hui
   const totalVisits = visits.length;
-  const conversion  = totalVisits > 0 ? Math.round((closedTx.length / totalVisits) * 1000) / 10 : 0;
+  const todayVisits = appointments.filter((a) => a.type === 'visite' && a.date === todayISO).length;
+
+  // Transactions
+  const totalTransactions = transactions.length;
+  const closedTx = transactions.filter((t) => t.stage === 'cloture');
+  const caRealise = closedTx.reduce((s, t) => s + t.amount, 0);
+  const conversion = totalVisits > 0 ? Math.round((closedTx.length / totalVisits) * 1000) / 10 : 0;
+
+  // Derniers biens ajoutés (triés par date de création descendante)
+  const latestProperties = [...properties]
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .slice(0, 3);
+
+  // Dernières demandes (triées par date de création descendante)
+  const latestClients = [...clients]
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .slice(0, 3);
 
   const todayAppts = appointments
     .filter((a) => a.date === todayISO && a.status !== 'annule')
@@ -50,7 +88,6 @@ export const AdminDashboard: React.FC = () => {
     { label: 'Terrain',          value: properties.filter((p) => p.type === 'terrain').length, color: '#0F766E' },
   ];
 
-  // Pipeline stages derived from transactions
   const PIPELINE_DEF = [
     { id: 'prospection', label: 'Prospection', color: '#9CA3AF' },
     { id: 'visite',      label: 'Visite',      color: '#185FA5' },
@@ -92,61 +129,71 @@ export const AdminDashboard: React.FC = () => {
           <button className="px-3.5 py-1.5 border border-gray-200 bg-white rounded-xl text-xs font-medium text-gray-700 hover:bg-gray-50 shadow-sm transition-colors">
             Ce mois
           </button>
-          <button className="px-4 py-1.5 bg-[#F5C518] hover:bg-[#E5B510] text-gray-950 font-bold rounded-xl text-xs shadow-sm transition-all hover:scale-[1.02] flex items-center gap-1.5">
-            Exporter
-          </button>
+          <Link
+            to="/admin/biens"
+            className="px-4 py-1.5 bg-[#F5C518] hover:bg-[#E5B510] text-gray-950 font-bold rounded-xl text-xs shadow-sm transition-all hover:scale-[1.02] flex items-center gap-1.5"
+          >
+            <Plus size={14} /> Nouveau bien
+          </Link>
         </div>
       </div>
 
-      {/* 4 Conception-matched KPI Cards */}
+      {/* 4 Conception-matched KPI Cards - 100% Live Data */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        {/* Biens en ligne */}
         <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-4 flex flex-col justify-between hover:shadow-md transition-shadow">
           <span className="text-xs text-gray-500 font-medium">Biens en ligne</span>
           <div className="flex items-end justify-between mt-2">
-            <span className="text-2xl md:text-3xl font-bold text-gray-900">{activeProperties || 24}</span>
+            <span className="text-2xl md:text-3xl font-bold text-gray-900">{activeProperties}</span>
             <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-              +2
+              +{recentPropsAdded}
             </span>
           </div>
         </div>
 
+        {/* Nouveaux clients */}
         <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-4 flex flex-col justify-between hover:shadow-md transition-shadow">
           <span className="text-xs text-gray-500 font-medium">Nouveaux clients</span>
           <div className="flex items-end justify-between mt-2">
-            <span className="text-2xl md:text-3xl font-bold text-gray-900">{activeClients || 6}</span>
+            <span className="text-2xl md:text-3xl font-bold text-gray-900">{totalClients}</span>
             <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-              +3
+              +{newClientsThisMonth}
             </span>
           </div>
         </div>
 
+        {/* Visites totales */}
         <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-4 flex flex-col justify-between hover:shadow-md transition-shadow">
-          <span className="text-xs text-gray-500 font-medium">Visites aujourd'hui</span>
+          <span className="text-xs text-gray-500 font-medium">Visites totales</span>
           <div className="flex items-end justify-between mt-2">
-            <span className="text-2xl md:text-3xl font-bold text-gray-900">{totalVisits || 12}</span>
+            <span className="text-2xl md:text-3xl font-bold text-gray-900">{totalVisits}</span>
             <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-              +5
+              +{todayVisits}
             </span>
           </div>
         </div>
 
+        {/* Transactions */}
         <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-4 flex flex-col justify-between hover:shadow-md transition-shadow">
           <span className="text-xs text-gray-500 font-medium">Transactions</span>
           <div className="flex items-end justify-between mt-2">
-            <span className="text-2xl md:text-3xl font-bold text-gray-900">{closedTx.length || 3}</span>
+            <span className="text-2xl md:text-3xl font-bold text-gray-900">{totalTransactions}</span>
             <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-              +1
+              +{closedTx.length}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Conception Showcase Row: Derniers biens ajoutés & Dernières demandes */}
+      {/* Conception Showcase Row: Derniers biens ajoutés & Dernières demandes (Live Data) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Derniers biens ajoutés (2 cols) */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200/90 shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-gray-900">Derniers biens ajoutés</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-gray-900">Derniers biens ajoutés</h3>
+              <span className="text-xs text-gray-400">({properties.length})</span>
+            </div>
             <Link
               to="/admin/biens"
               className="text-xs font-semibold text-[#B45309] hover:text-[#92400E] flex items-center gap-1 transition-colors"
@@ -155,87 +202,85 @@ export const AdminDashboard: React.FC = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-            {/* Card 1 */}
-            <div className="border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white flex flex-col">
-              <div className="relative h-28 bg-slate-100 overflow-hidden group">
-                <img
-                  src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&auto=format&fit=crop&q=80"
-                  alt="Villa à Hammamet"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <button className="absolute top-2 right-2 p-1 rounded-full bg-white/80 hover:bg-white text-gray-400 hover:text-red-500 transition-colors shadow-sm">
-                  <Heart size={13} />
-                </button>
-              </div>
-              <div className="p-3 flex-1 flex flex-col justify-between">
-                <div>
-                  <h4 className="text-xs font-semibold text-gray-800 truncate">Villa à Hammamet</h4>
-                  <div className="text-sm font-extrabold text-gray-950 mt-1">850 000 TND</div>
-                </div>
-                <div className="flex items-center gap-2.5 text-[11px] text-gray-400 mt-2.5 pt-2 border-t border-gray-50">
-                  <span className="flex items-center gap-1"><Bed size={12} /> 4</span>
-                  <span className="flex items-center gap-1"><Bath size={12} /> 3</span>
-                  <span className="flex items-center gap-1"><Square size={11} /> 320 m²</span>
-                </div>
-              </div>
-            </div>
+          {latestProperties.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              {latestProperties.map((property) => {
+                const photoUrl =
+                  property.photos && property.photos.length > 0
+                    ? property.photos[0]
+                    : 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&auto=format&fit=crop&q=80';
 
-            {/* Card 2 */}
-            <div className="border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white flex flex-col">
-              <div className="relative h-28 bg-slate-100 overflow-hidden group">
-                <img
-                  src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop&q=80"
-                  alt="Appartement à Tunis"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <button className="absolute top-2 right-2 p-1 rounded-full bg-white/80 hover:bg-white text-gray-400 hover:text-red-500 transition-colors shadow-sm">
-                  <Heart size={13} />
-                </button>
-              </div>
-              <div className="p-3 flex-1 flex flex-col justify-between">
-                <div>
-                  <h4 className="text-xs font-semibold text-gray-800 truncate">Appartement à Tunis</h4>
-                  <div className="text-sm font-extrabold text-gray-950 mt-1">420 000 TND</div>
-                </div>
-                <div className="flex items-center gap-2.5 text-[11px] text-gray-400 mt-2.5 pt-2 border-t border-gray-50">
-                  <span className="flex items-center gap-1"><Bed size={12} /> 3</span>
-                  <span className="flex items-center gap-1"><Bath size={12} /> 2</span>
-                  <span className="flex items-center gap-1"><Square size={11} /> 120 m²</span>
-                </div>
-              </div>
+                return (
+                  <Link
+                    key={property.id}
+                    to={`/admin/biens/${property.id}`}
+                    className="border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all bg-white flex flex-col group"
+                  >
+                    <div className="relative h-28 bg-slate-100 overflow-hidden">
+                      <img
+                        src={photoUrl}
+                        alt={property.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&auto=format&fit=crop&q=80';
+                        }}
+                      />
+                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/90 text-gray-800 shadow-sm">
+                        {property.type}
+                      </span>
+                    </div>
+                    <div className="p-3 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h4 className="text-xs font-semibold text-gray-800 truncate group-hover:text-primary transition-colors">
+                          {property.title}
+                        </h4>
+                        <div className="text-sm font-extrabold text-gray-950 mt-1">
+                          {fmt(property.price)} DT{property.priceType === 'mois' ? '/mois' : ''}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-[11px] text-gray-400 mt-2.5 pt-2 border-t border-gray-50">
+                        {property.rooms ? (
+                          <span className="flex items-center gap-1"><Bed size={12} /> {property.rooms}</span>
+                        ) : null}
+                        {property.bathrooms ? (
+                          <span className="flex items-center gap-1"><Bath size={12} /> {property.bathrooms}</span>
+                        ) : null}
+                        {property.surface ? (
+                          <span className="flex items-center gap-1"><Square size={11} /> {property.surface} m²</span>
+                        ) : null}
+                        <span className="ml-auto truncate text-[10px] text-gray-400 max-w-[80px]">
+                          {property.location}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
-
-            {/* Card 3 */}
-            <div className="border border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white flex flex-col">
-              <div className="relative h-28 bg-slate-100 overflow-hidden group">
-                <img
-                  src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&auto=format&fit=crop&q=80"
-                  alt="Terrain à Sousse"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <button className="absolute top-2 right-2 p-1 rounded-full bg-white/80 hover:bg-white text-gray-400 hover:text-red-500 transition-colors shadow-sm">
-                  <Heart size={13} />
-                </button>
-              </div>
-              <div className="p-3 flex-1 flex flex-col justify-between">
-                <div>
-                  <h4 className="text-xs font-semibold text-gray-800 truncate">Terrain à Sousse</h4>
-                  <div className="text-sm font-extrabold text-gray-950 mt-1">250 000 TND</div>
-                </div>
-                <div className="flex items-center gap-2.5 text-[11px] text-gray-400 mt-2.5 pt-2 border-t border-gray-50">
-                  <span className="flex items-center gap-1"><Square size={11} /> 800 m²</span>
-                </div>
-              </div>
+          ) : (
+            <div className="py-10 flex flex-col items-center justify-center text-gray-400 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+              <Building2 size={28} className="mb-2 opacity-40 text-amber-500" />
+              <p className="text-xs font-medium text-gray-600">Aucun bien enregistré</p>
+              <p className="text-[11px] text-gray-400 mt-0.5">Ajoutez des biens pour enrichir votre catalogue en ligne</p>
+              <Link
+                to="/admin/biens"
+                className="mt-3 px-3.5 py-1.5 bg-[#F5C518] hover:bg-[#E5B510] text-gray-950 font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-1"
+              >
+                <Plus size={13} /> Ajouter un bien
+              </Link>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Dernières demandes (1 col) */}
+        {/* Dernières demandes (Live Clients) */}
         <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold text-gray-900">Dernières demandes</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-gray-900">Dernières demandes</h3>
+                <span className="text-xs text-gray-400">({clients.length})</span>
+              </div>
               <Link
                 to="/admin/clients"
                 className="text-xs font-semibold text-[#B45309] hover:text-[#92400E] flex items-center gap-1 transition-colors"
@@ -244,56 +289,61 @@ export const AdminDashboard: React.FC = () => {
               </Link>
             </div>
 
-            <div className="space-y-3">
-              {/* Demand 1 */}
-              <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-[#FEF9E7] border border-[#F5C518]/30 flex items-center justify-center flex-shrink-0 text-amber-700">
-                    <Home size={15} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-gray-900 truncate">Achat – Maison</div>
-                    <div className="text-[11px] text-gray-400">Tunis · 16/09/2025</div>
-                  </div>
-                </div>
-                <Badge variant="nouveau" size="sm" />
-              </div>
+            {latestClients.length > 0 ? (
+              <div className="space-y-2.5">
+                {latestClients.map((client) => {
+                  const isBuyer = client.type === 'acheteur';
+                  const isRenter = client.type === 'locataire';
+                  const typeLabel = isBuyer ? 'Achat' : isRenter ? 'Location' : 'Vente';
+                  const pref = client.propertyPreferences?.type?.[0] || client.type;
+                  const prefTitle = pref.charAt(0).toUpperCase() + pref.slice(1);
+                  const location = client.propertyPreferences?.locations?.[0] || client.search || 'Toutes zones';
+                  const dateStr = client.createdAt ? new Date(client.createdAt).toLocaleDateString('fr-FR') : 'Récent';
+                  const badgeVariant = client.status === 'actif' ? 'nouveau' : 'en_cours';
 
-              {/* Demand 2 */}
-              <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0 text-blue-700">
-                    <Building2 size={15} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-gray-900 truncate">Achat – Appartement</div>
-                    <div className="text-[11px] text-gray-400">Sousse · 16/09/2025</div>
-                  </div>
-                </div>
-                <Badge variant="nouveau" size="sm" />
+                  return (
+                    <Link
+                      key={client.id}
+                      to={`/admin/clients/${client.id}`}
+                      className="flex items-center justify-between p-2.5 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100 group"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-full bg-[#FEF9E7] border border-[#F5C518]/30 flex items-center justify-center flex-shrink-0 text-amber-700">
+                          <Home size={15} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-gray-900 truncate group-hover:text-primary transition-colors">
+                            {typeLabel} – {prefTitle}
+                          </div>
+                          <div className="text-[11px] text-gray-400 truncate">
+                            {client.name} · {location} · {dateStr}
+                          </div>
+                        </div>
+                      </div>
+                      <Badge variant={badgeVariant} size="sm" />
+                    </Link>
+                  );
+                })}
               </div>
-
-              {/* Demand 3 */}
-              <div className="flex items-center justify-between p-2.5 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-[#FEF9E7] border border-[#F5C518]/30 flex items-center justify-center flex-shrink-0 text-amber-700">
-                    <Home size={15} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-gray-900 truncate">Location – Villa</div>
-                    <div className="text-[11px] text-gray-400">Hammamet · 15/09/2025</div>
-                  </div>
-                </div>
-                <Badge variant="en_cours" size="sm" />
+            ) : (
+              <div className="py-8 flex flex-col items-center justify-center text-gray-400 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+                <Users size={24} className="mb-2 opacity-40 text-amber-500" />
+                <p className="text-xs font-medium text-gray-600">Aucun client pour l'instant</p>
+                <Link
+                  to="/admin/clients"
+                  className="mt-2 text-xs text-primary hover:underline font-semibold"
+                >
+                  Ajouter un prospect
+                </Link>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
-            <span>3 nouvelles requêtes</span>
+            <span>{totalClients} client{totalClients > 1 ? 's' : ''} au total</span>
             <span className="text-emerald-600 font-semibold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Mises à jour en direct
+              Données en direct
             </span>
           </div>
         </div>
