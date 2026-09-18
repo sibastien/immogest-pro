@@ -137,6 +137,28 @@ export interface Transaction {
   notes?: string;
 }
 
+export interface Tenant {
+  id: string;
+  name: string;
+  slug: string;
+  plan: 'starter' | 'trial' | 'pro' | 'entreprise';
+  planStatus: 'active' | 'past_due' | 'canceled';
+  trialEndsAt?: string | null;
+  ownerEmail: string;
+  createdAt: string;
+  usage?: {
+    properties: number;
+    agents: number;
+    clients: number;
+    transactions: number;
+  };
+  limits?: {
+    properties: number;
+    agents: number;
+    storage: string;
+  };
+}
+
 export interface User {
   id: string;
   name: string;
@@ -145,6 +167,7 @@ export interface User {
   agentId?: string;
   clientId?: string;
   email: string;
+  tenantId?: string;
 }
 
 export interface Appointment {

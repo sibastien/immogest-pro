@@ -6,12 +6,6 @@ const { clientToJSON } = require('../mappers');
 const router = express.Router();
 router.use(protect);
 
-// Contacts are a shared directory: every authenticated user sees all clients.
-// (agent_id still records who created/owns each fiche.)
-function scopeFilter() {
-  return { sql: '', params: [] };
-}
-
 function rowFromBody(b) {
   return {
     name: String(b.name || '').trim(),
@@ -30,41 +24,36 @@ function rowFromBody(b) {
   };
 }
 
-// GET /api/clients
+// GET /api/clients — scoped to tenant.
 router.get('/', (req, res) => {
-  const { sql, params } = scopeFilter(req.user);
-  const rows = db.prepare(`SELECT * FROM clients${sql} ORDER BY created_at DESC`).all(...params);
+  const rows = db.prepare('SELECT * FROM clients WHERE tenant_id = ? ORDER BY created_at DESC').all(req.tenantId);
   res.json(rows.map(clientToJSON));
 });
 
-// GET /api/clients/:id
 router.get('/:id', (req, res) => {
-  const row = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.params.id);
+  const row = db.prepare('SELECT * FROM clients WHERE id = ? AND tenant_id = ?').get(req.params.id, req.tenantId);
   if (!row) return res.status(404).json({ error: 'Client introuvable.' });
   res.json(clientToJSON(row));
 });
 
-// POST /api/clients
 router.post('/', (req, res) => {
   if (!req.body.name?.trim()) return res.status(400).json({ error: 'Le nom est obligatoire.' });
   const id = req.body.id || `client-${Date.now()}`;
   const data = rowFromBody(req.body);
-  // Agents can only file clients under themselves.
   if (req.user.role !== 'admin' && req.user.role !== 'coordinatrice') data.agent_id = req.user.id;
 
   db.prepare(`
-    INSERT INTO clients (id, name, phone, email, type, budget_min, budget_max, search,
+    INSERT INTO clients (id, tenant_id, name, phone, email, type, budget_min, budget_max, search,
       agent_id, status, last_contact, source, notes, property_preferences, created_at)
-    VALUES (@id, @name, @phone, @email, @type, @budget_min, @budget_max, @search,
+    VALUES (@id, @tenant_id, @name, @phone, @email, @type, @budget_min, @budget_max, @search,
       @agent_id, @status, @last_contact, @source, @notes, @property_preferences, @created_at)
-  `).run({ id, ...data, created_at: new Date().toISOString().split('T')[0] });
+  `).run({ id, tenant_id: req.tenantId, ...data, created_at: new Date().toISOString().split('T')[0] });
 
   res.status(201).json(clientToJSON(db.prepare('SELECT * FROM clients WHERE id = ?').get(id)));
 });
 
-// PUT /api/clients/:id
 router.put('/:id', (req, res) => {
-  const existing = db.prepare('SELECT * FROM clients WHERE id = ?').get(req.params.id);
+  const existing = db.prepare('SELECT * FROM clients WHERE id = ? AND tenant_id = ?').get(req.params.id, req.tenantId);
   if (!existing) return res.status(404).json({ error: 'Client introuvable.' });
   const data = rowFromBody({ ...clientToJSON(existing), ...req.body });
 
@@ -73,17 +62,16 @@ router.put('/:id', (req, res) => {
       budget_min=@budget_min, budget_max=@budget_max, search=@search, agent_id=@agent_id,
       status=@status, last_contact=@last_contact, source=@source, notes=@notes,
       property_preferences=@property_preferences
-    WHERE id=@id
-  `).run({ id: req.params.id, ...data });
+    WHERE id=@id AND tenant_id=@tenant_id
+  `).run({ id: req.params.id, tenant_id: req.tenantId, ...data });
 
   res.json(clientToJSON(db.prepare('SELECT * FROM clients WHERE id = ?').get(req.params.id)));
 });
 
-// DELETE /api/clients/:id — remove a contact. Managers only (admin / coordinatrice).
 router.delete('/:id', requireRole('admin', 'coordinatrice'), (req, res) => {
-  const existing = db.prepare('SELECT id FROM clients WHERE id = ?').get(req.params.id);
+  const existing = db.prepare('SELECT id FROM clients WHERE id = ? AND tenant_id = ?').get(req.params.id, req.tenantId);
   if (!existing) return res.status(404).json({ error: 'Client introuvable.' });
-  db.prepare('DELETE FROM clients WHERE id = ?').run(req.params.id);
+  db.prepare('DELETE FROM clients WHERE id = ? AND tenant_id = ?').run(req.params.id, req.tenantId);
   res.json({ ok: true });
 });
 

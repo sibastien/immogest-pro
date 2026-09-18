@@ -29,6 +29,7 @@ function userToAuth(row) {
     initials: row.initials,
     role: row.role,
     email: row.email,
+    tenantId: row.tenant_id || 'default',
     ...(isClient ? { clientId: row.id } : { agentId: row.id }),
   };
 }

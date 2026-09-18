@@ -14,11 +14,11 @@ function humanSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
 }
 
-// GET /api/documents — all documents, optionally filtered by ?propertyId.
+// GET /api/documents — all documents in tenant, optionally filtered by ?propertyId.
 router.get('/', (req, res) => {
   const rows = req.query.propertyId
-    ? db.prepare('SELECT * FROM documents WHERE property_id = ? ORDER BY created_at DESC').all(req.query.propertyId)
-    : db.prepare('SELECT * FROM documents ORDER BY created_at DESC').all();
+    ? db.prepare('SELECT * FROM documents WHERE tenant_id = ? AND property_id = ? ORDER BY created_at DESC').all(req.tenantId, req.query.propertyId)
+    : db.prepare('SELECT * FROM documents WHERE tenant_id = ? ORDER BY created_at DESC').all(req.tenantId);
   res.json(rows.map(documentToJSON));
 });
 
@@ -30,10 +30,11 @@ router.post('/', upload.single('file'), (req, res) => {
 
   const id = `doc-${Date.now()}`;
   db.prepare(`
-    INSERT INTO documents (id, type, title, property_id, client_id, status, url, size, created_at, expires_at, signed_at)
-    VALUES (@id, @type, @title, @property_id, @client_id, @status, @url, @size, @created_at, @expires_at, @signed_at)
+    INSERT INTO documents (id, tenant_id, type, title, property_id, client_id, status, url, size, created_at, expires_at, signed_at)
+    VALUES (@id, @tenant_id, @type, @title, @property_id, @client_id, @status, @url, @size, @created_at, @expires_at, @signed_at)
   `).run({
     id,
+    tenant_id: req.tenantId,
     type: b.type || 'autre',
     title: String(b.title).trim(),
     property_id: b.propertyId || null,
@@ -46,12 +47,12 @@ router.post('/', upload.single('file'), (req, res) => {
     signed_at: b.signedAt || null,
   });
 
-  res.status(201).json(documentToJSON(db.prepare('SELECT * FROM documents WHERE id = ?').get(id)));
+  res.status(201).json(documentToJSON(db.prepare('SELECT * FROM documents WHERE id = ? AND tenant_id = ?').get(id, req.tenantId)));
 });
 
-// DELETE /api/documents/:id — admin only.
+// DELETE /api/documents/:id — admin only within tenant.
 router.delete('/:id', requireRole('admin'), (req, res) => {
-  db.prepare('DELETE FROM documents WHERE id = ?').run(req.params.id);
+  db.prepare('DELETE FROM documents WHERE id = ? AND tenant_id = ?').run(req.params.id, req.tenantId);
   res.json({ ok: true });
 });
 

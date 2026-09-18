@@ -52,7 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   mobileOpen = false,
   onMobileClose,
 }) => {
-  const { user, logout } = useAuthStore();
+  const { user, tenant, logout } = useAuthStore();
   const navigate = useNavigate();
   const colors = ACCENT[accentColor] || ACCENT.gold;
 
@@ -71,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     >
       {/* Logo */}
       <div className="px-5 py-5 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <Logo size="md" variant="dark" subtitle={logoSubtitle} />
+        <Logo size="md" variant="dark" subtitle={tenant?.name ? tenant.name.toUpperCase() : logoSubtitle} />
         {onMobileClose && (
           <button
             onClick={onMobileClose}
@@ -145,7 +145,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <Avatar initials={user?.initials ?? '?'} size="sm" />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold text-white truncate">{user?.name}</div>
-            <div className="text-xs text-[#94A3B8] truncate">{user?.email}</div>
+            <div className="text-xs text-[#93C5FD] truncate flex items-center gap-1.5 mt-0.5">
+              <span className="truncate">{user?.email}</span>
+              {tenant?.plan && (
+                <span className="flex-shrink-0 px-1.5 py-0.5 rounded text-[9px] bg-white/20 text-white font-bold uppercase">
+                  {tenant.plan}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

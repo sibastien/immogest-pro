@@ -24,6 +24,7 @@ app.use('/api/documents', require('./routes/documents'));
 app.use('/api/calls', require('./routes/calls'));
 app.use('/api/visits', require('./routes/visits'));
 app.use('/api/comptes-rendus', require('./routes/comptesRendus'));
+app.use('/api/tenant', require('./routes/tenants'));
 
 // 404 for unknown API routes
 app.use('/api', (req, res) => res.status(404).json({ error: 'Route introuvable.' }));

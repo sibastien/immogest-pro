@@ -35,37 +35,35 @@ function rowFromBody(b) {
 const COLS = `ref, title, deal_type, type, status, price, price_type, surface, rooms, bathrooms,
   location, address, agent_id, photos, description, features, floor, total_floors, parking, furnished, published`;
 
-// GET /api/properties — shared catalogue, visible to every authenticated user.
+// GET /api/properties — scoped to the caller's tenant.
 router.get('/', (req, res) => {
-  const rows = db.prepare('SELECT * FROM properties ORDER BY created_at DESC').all();
+  const rows = db.prepare('SELECT * FROM properties WHERE tenant_id = ? ORDER BY created_at DESC').all(req.tenantId);
   res.json(rows.map(propertyToJSON));
 });
 
 router.get('/:id', (req, res) => {
-  const row = db.prepare('SELECT * FROM properties WHERE id = ?').get(req.params.id);
+  const row = db.prepare('SELECT * FROM properties WHERE id = ? AND tenant_id = ?').get(req.params.id, req.tenantId);
   if (!row) return res.status(404).json({ error: 'Bien introuvable.' });
   res.json(propertyToJSON(row));
 });
 
-// POST /api/properties — any authenticated user may add a bien.
 router.post('/', (req, res) => {
   if (!req.body.title?.trim()) return res.status(400).json({ error: 'Le titre est obligatoire.' });
   const id = req.body.id || `prop-${Date.now()}`;
   const data = rowFromBody(req.body);
 
   db.prepare(`
-    INSERT INTO properties (id, ${COLS}, created_at)
-    VALUES (@id, @ref, @title, @deal_type, @type, @status, @price, @price_type, @surface, @rooms, @bathrooms,
+    INSERT INTO properties (id, tenant_id, ${COLS}, created_at)
+    VALUES (@id, @tenant_id, @ref, @title, @deal_type, @type, @status, @price, @price_type, @surface, @rooms, @bathrooms,
       @location, @address, @agent_id, @photos, @description, @features, @floor, @total_floors,
       @parking, @furnished, @published, @created_at)
-  `).run({ id, ...data, created_at: req.body.createdAt || new Date().toISOString().split('T')[0] });
+  `).run({ id, tenant_id: req.tenantId, ...data, created_at: req.body.createdAt || new Date().toISOString().split('T')[0] });
 
   res.status(201).json(propertyToJSON(db.prepare('SELECT * FROM properties WHERE id = ?').get(id)));
 });
 
-// PUT /api/properties/:id
 router.put('/:id', (req, res) => {
-  const existing = db.prepare('SELECT * FROM properties WHERE id = ?').get(req.params.id);
+  const existing = db.prepare('SELECT * FROM properties WHERE id = ? AND tenant_id = ?').get(req.params.id, req.tenantId);
   if (!existing) return res.status(404).json({ error: 'Bien introuvable.' });
   const data = rowFromBody({ ...propertyToJSON(existing), ...req.body });
 
@@ -74,15 +72,14 @@ router.put('/:id', (req, res) => {
       price_type=@price_type, surface=@surface, rooms=@rooms, bathrooms=@bathrooms, location=@location,
       address=@address, agent_id=@agent_id, photos=@photos, description=@description, features=@features,
       floor=@floor, total_floors=@total_floors, parking=@parking, furnished=@furnished, published=@published
-    WHERE id=@id
-  `).run({ id: req.params.id, ...data });
+    WHERE id=@id AND tenant_id=@tenant_id
+  `).run({ id: req.params.id, tenant_id: req.tenantId, ...data });
 
   res.json(propertyToJSON(db.prepare('SELECT * FROM properties WHERE id = ?').get(req.params.id)));
 });
 
-// DELETE /api/properties/:id — admin and agent bureau (catalogue management).
 router.delete('/:id', requireRole('admin', 'agent_bureau'), (req, res) => {
-  db.prepare('DELETE FROM properties WHERE id = ?').run(req.params.id);
+  db.prepare('DELETE FROM properties WHERE id = ? AND tenant_id = ?').run(req.params.id, req.tenantId);
   res.json({ ok: true });
 });
 

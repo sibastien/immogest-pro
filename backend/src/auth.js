@@ -18,9 +18,15 @@ function normalizeCode(code) {
   return String(code ?? '').trim().toUpperCase();
 }
 
+// tenantId is now embedded in every token — every API request is scoped to it.
 function signToken(user) {
   return jwt.sign(
-    { id: user.id, role: user.role, agentId: user.agentId ?? null },
+    {
+      id:       user.id,
+      role:     user.role,
+      agentId:  user.agentId ?? null,
+      tenantId: user.tenantId ?? 'default',
+    },
     JWT_SECRET,
     { expiresIn: '30d' }
   );
