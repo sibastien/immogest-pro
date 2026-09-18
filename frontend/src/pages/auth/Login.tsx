@@ -1,52 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import {
+  Eye, EyeOff, X, Building2, Users, CalendarCheck,
+  BarChart3, CheckCircle, ArrowRight, Shield, Zap,
+  MapPin, Phone, FileText, Star, ChevronRight,
+} from 'lucide-react';
 import { useAuthStore, dashboardPathByRole } from '../../store/authStore';
 
-export const Login: React.FC = () => {
+// ── Login Modal ───────────────────────────────────────────────────────────────
+interface LoginModalProps {
+  onClose: () => void;
+}
+
+const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
   const navigate = useNavigate();
   const { login } = useAuthStore();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
-
     setLoading(true);
     setError('');
-
     const result = await login(email, password);
     setLoading(false);
-
     if (result.success) {
       const role = useAuthStore.getState().user?.role;
       if (role) navigate(dashboardPathByRole[role]);
     } else {
-      setError(result.error ?? 'Erreur de connexion');
+      setError(result.error ?? 'Identifiants incorrects. Réessayez.');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-light flex flex-col items-center justify-center p-4 py-8">
-      {/* Logo */}
-      <div className="mb-6 text-center">
-        <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-          <span className="text-white text-2xl font-bold">IG</span>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)' }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        {/* Modal header */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: '#185FA5' }}>
+              <span className="text-white text-sm font-bold">IG</span>
+            </div>
+            <div>
+              <div className="text-sm font-bold text-gray-900">ImmoGest Pro</div>
+              <div className="text-xs text-gray-400">Connexion à votre espace</div>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+          >
+            <X size={16} />
+          </button>
         </div>
-        <h1 className="text-2xl font-semibold text-gray-900">ImmoGest Pro</h1>
-        <p className="text-gray-500 text-sm mt-1">Connexion à votre espace</p>
-      </div>
 
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-        {/* Login form */}
-        <form onSubmit={handleSubmit} autoComplete="off" className="p-5 sm:p-6 space-y-4">
+        <form onSubmit={handleSubmit} autoComplete="off" className="px-6 pb-6 space-y-4">
+          {error && (
+            <div className="px-3 py-2.5 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Adresse email</label>
             <input
               type="email"
               value={email}
@@ -54,12 +85,13 @@ export const Login: React.FC = () => {
               placeholder="votre@email.tn"
               required
               autoComplete="off"
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-blue-400 transition-all"
+              style={{ '--tw-ring-color': '#185FA5' } as React.CSSProperties}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
               Mot de passe / Code d'accès
             </label>
             <div className="relative">
@@ -70,7 +102,7 @@ export const Login: React.FC = () => {
                 placeholder="••••••••"
                 required
                 autoComplete="new-password"
-                className="w-full px-3 py-2.5 pr-10 border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+                className="w-full px-3.5 py-2.5 pr-10 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-blue-400 transition-all"
               />
               <button
                 type="button"
@@ -82,28 +114,362 @@ export const Login: React.FC = () => {
             </div>
           </div>
 
-          {error && (
-            <div className="px-3 py-2 bg-danger-light border border-danger/20 rounded-lg">
-              <p className="text-sm text-danger">{error}</p>
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={loading || !email || !password}
-            className="w-full py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 active:scale-[0.98]"
+            style={{ background: '#185FA5' }}
           >
-            {loading ? 'Connexion en cours…' : 'Se connecter'}
+            {loading ? 'Connexion…' : 'Se connecter'}
           </button>
 
-          <p className="text-xs text-gray-400 text-center pt-1">
-            Agents et clients : connectez-vous avec l'email et le code d'accès
-            fournis par votre administrateur.
+          <p className="text-[11px] text-gray-400 text-center leading-relaxed">
+            Connectez-vous avec l'email et le code d'accès fournis par votre administrateur.
           </p>
         </form>
       </div>
+    </div>
+  );
+};
 
-      <p className="text-xs text-gray-400 mt-6">ImmoGest Pro v1.0</p>
+// ── Landing page data ─────────────────────────────────────────────────────────
+const FEATURES = [
+  {
+    icon: Building2,
+    color: '#185FA5',
+    bg: '#E6F1FB',
+    title: 'Catalogue de biens',
+    desc: 'Gérez votre portefeuille immobilier — vente, location, terrain, commercial. Photos, prix, statuts, mandats.',
+  },
+  {
+    icon: Users,
+    color: '#7C3AED',
+    bg: '#EDE9FE',
+    title: 'Gestion des clients',
+    desc: 'Fiches prospects enrichies, suivi du pipeline, historique des contacts et alertes de relance automatiques.',
+  },
+  {
+    icon: CalendarCheck,
+    color: '#16A34A',
+    bg: '#DCFCE7',
+    title: 'Planification des visites',
+    desc: 'Agenda partagé, assignation aux agents terrain, bons de visite numériques et comptes rendus structurés.',
+  },
+  {
+    icon: BarChart3,
+    color: '#D97706',
+    bg: '#FEF3C7',
+    title: 'Rapports & Performance',
+    desc: 'Tableaux de bord en temps réel, CA mensuel, taux de conversion et classement agents.',
+  },
+  {
+    icon: MapPin,
+    color: '#0F766E',
+    bg: '#CCFBF1',
+    title: 'Suivi terrain',
+    desc: 'Application mobile-friendly pour les agents terrain : visites GPS, compte rendu photo, statut en temps réel.',
+  },
+  {
+    icon: FileText,
+    color: '#DC2626',
+    bg: '#FEE2E2',
+    title: 'Documents & Transactions',
+    desc: 'Pipeline de vente Kanban, gestion des compromis, actes et commissions avec export PDF.',
+  },
+];
+
+const ROLES = [
+  { role: 'Admin', color: '#185FA5', desc: 'Vision globale, équipe, biens, transactions, rapports.' },
+  { role: 'Coordinatrice', color: '#7C3AED', desc: 'Dispatch, planning agents, validation des comptes rendus.' },
+  { role: 'Agent bureau', color: '#D97706', desc: 'Prospects, appels, catalogue, agenda personnel.' },
+  { role: 'Agent terrain', color: '#16A34A', desc: 'Visites, comptes rendus, clients assignés, performance.' },
+  { role: 'Client', color: '#0F766E', desc: 'Suivi de dossier, documents, rendez-vous.' },
+];
+
+const STATS = [
+  { value: '5', label: 'Espaces par rôle', icon: Shield },
+  { value: '100%', label: 'Données en direct', icon: Zap },
+  { value: '∞', label: 'Biens & clients', icon: Building2 },
+  { value: '24/7', label: 'Accessible partout', icon: Phone },
+];
+
+// ── Main landing page ─────────────────────────────────────────────────────────
+export const Login: React.FC = () => {
+  const [showLogin, setShowLogin] = useState(false);
+  const { isAuthenticated, user } = useAuthStore();
+  const navigate = useNavigate();
+
+  // If already logged in, redirect immediately
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      navigate(dashboardPathByRole[user.role]);
+    }
+  }, [isAuthenticated, user, navigate]);
+
+  return (
+    <div className="min-h-screen bg-white" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+
+      {/* ── Navbar ───────────────────────────────────────────────────────── */}
+      <header
+        className="sticky top-0 z-40 border-b border-gray-100"
+        style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)' }}
+      >
+        <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm" style={{ background: '#185FA5' }}>
+              <span className="text-white text-xs font-bold">IG</span>
+            </div>
+            <span className="font-bold text-gray-900 text-base tracking-tight">ImmoGest Pro</span>
+          </div>
+
+          {/* Nav links */}
+          <nav className="hidden md:flex items-center gap-6 text-sm text-gray-500 font-medium">
+            <a href="#features" className="hover:text-gray-900 transition-colors">Fonctionnalités</a>
+            <a href="#roles" className="hover:text-gray-900 transition-colors">Rôles</a>
+            <a href="#about" className="hover:text-gray-900 transition-colors">À propos</a>
+          </nav>
+
+          {/* CTA */}
+          <button
+            onClick={() => setShowLogin(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-sm transition-all hover:opacity-90 hover:shadow-md active:scale-[0.97]"
+            style={{ background: '#185FA5' }}
+          >
+            Se connecter <ChevronRight size={15} />
+          </button>
+        </div>
+      </header>
+
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0D3B6E 0%, #185FA5 50%, #1E7FC4 100%)' }}>
+        {/* Background decoration */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-10" style={{ background: '#F5C518' }} />
+          <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-5" style={{ background: 'white' }} />
+          <div className="absolute top-1/2 left-1/3 w-px h-64 opacity-10" style={{ background: 'white' }} />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-5 py-20 md:py-28 text-center">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 border border-white/20" style={{ background: 'rgba(255,255,255,0.1)', color: '#F5C518' }}>
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#F5C518' }} />
+            Plateforme de gestion immobilière
+          </div>
+
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight mb-5">
+            Gérez votre agence<br />
+            <span style={{ color: '#F5C518' }}>de A à Z</span>
+          </h1>
+          <p className="text-base md:text-lg text-blue-100 max-w-2xl mx-auto mb-8 leading-relaxed">
+            ImmoGest Pro centralise biens, clients, visites, agents et transactions
+            dans une seule plateforme pensée pour les agences immobilières tunisiennes.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => setShowLogin(true)}
+              className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-sm font-bold shadow-xl transition-all hover:scale-[1.03] active:scale-[0.98]"
+              style={{ background: '#F5C518', color: '#0D3B6E' }}
+            >
+              Accéder à la plateforme <ArrowRight size={16} />
+            </button>
+            <a
+              href="#features"
+              className="flex items-center gap-2 px-6 py-3.5 rounded-2xl text-sm font-semibold border border-white/25 text-white hover:bg-white/10 transition-all"
+            >
+              Voir les fonctionnalités
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats bar ────────────────────────────────────────────────────── */}
+      <section className="border-b border-gray-100" style={{ background: '#F9FAFB' }}>
+        <div className="max-w-7xl mx-auto px-5 py-8 grid grid-cols-2 md:grid-cols-4 gap-6">
+          {STATS.map((s) => (
+            <div key={s.label} className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#E6F1FB' }}>
+                <s.icon size={18} style={{ color: '#185FA5' }} />
+              </div>
+              <div>
+                <div className="text-xl font-black text-gray-900">{s.value}</div>
+                <div className="text-xs text-gray-500">{s.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Features ─────────────────────────────────────────────────────── */}
+      <section id="features" className="max-w-7xl mx-auto px-5 py-20">
+        <div className="text-center mb-12">
+          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#185FA5' }}>Fonctionnalités</span>
+          <h2 className="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-3">Tout ce dont votre agence a besoin</h2>
+          <p className="text-gray-500 max-w-xl mx-auto text-sm leading-relaxed">
+            Une suite complète d'outils conçus pour les professionnels de l'immobilier.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {FEATURES.map((f) => (
+            <div
+              key={f.title}
+              className="group p-6 rounded-2xl border border-gray-100 bg-white hover:border-gray-200 hover:shadow-lg transition-all duration-300 cursor-default"
+            >
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110" style={{ background: f.bg }}>
+                <f.icon size={20} style={{ color: f.color }} />
+              </div>
+              <h3 className="text-sm font-bold text-gray-900 mb-2">{f.title}</h3>
+              <p className="text-xs text-gray-500 leading-relaxed">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Roles ────────────────────────────────────────────────────────── */}
+      <section id="roles" style={{ background: '#F9FAFB' }}>
+        <div className="max-w-7xl mx-auto px-5 py-20">
+          <div className="text-center mb-12">
+            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#185FA5' }}>Espaces personnalisés</span>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-3">Une interface par rôle</h2>
+            <p className="text-gray-500 max-w-xl mx-auto text-sm leading-relaxed">
+              Chaque utilisateur accède uniquement aux outils dont il a besoin.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {ROLES.map((r) => (
+              <div
+                key={r.role}
+                className="p-5 rounded-2xl bg-white border border-gray-100 hover:shadow-md transition-all group"
+              >
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 text-xs font-black text-white"
+                  style={{ background: r.color }}
+                >
+                  {r.role[0]}
+                </div>
+                <div className="text-sm font-bold text-gray-900 mb-1.5">{r.role}</div>
+                <p className="text-xs text-gray-500 leading-relaxed">{r.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── About / Why ──────────────────────────────────────────────────── */}
+      <section id="about" className="max-w-7xl mx-auto px-5 py-20">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#185FA5' }}>Pourquoi ImmoGest Pro</span>
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-5">Fait pour le marché tunisien</h2>
+            <div className="space-y-4">
+              {[
+                'Interface en français, prix en dinars tunisiens (DT)',
+                'Gestion multi-agences avec rôles et permissions',
+                'Comptes rendus de visite photos géolocalisés',
+                'Pipeline commercial Kanban en temps réel',
+                'Tableau de bord avec statistiques en direct',
+                'Accessible sur mobile, tablette et desktop',
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: '#DCFCE7' }}>
+                    <CheckCircle size={12} style={{ color: '#16A34A' }} />
+                  </div>
+                  <p className="text-sm text-gray-700">{item}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="rounded-2xl overflow-hidden shadow-2xl border border-gray-100" style={{ background: 'linear-gradient(135deg, #0D3B6E 0%, #185FA5 100%)' }}>
+              {/* Mock UI screenshot */}
+              <div className="p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+                  <div className="ml-3 px-3 py-0.5 rounded text-white/40 text-xs border border-white/10" style={{ background: 'rgba(255,255,255,0.07)' }}>
+                    immogest.pro/admin
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {/* Mock stat cards */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {[['32', 'Biens actifs'], ['148', 'Clients'], ['24', 'Visites']].map(([v, l]) => (
+                      <div key={l} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                        <div className="text-xl font-black text-white">{v}</div>
+                        <div className="text-xs text-blue-200">{l}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Mock list items */}
+                  {['Villa Carthage — 450 000 DT', 'Appart. La Marsa — 280 000 DT', 'Bureau Lac II — 1 500 DT/mois'].map((item) => (
+                    <div key={item} className="flex items-center gap-2.5 rounded-xl p-2.5" style={{ background: 'rgba(255,255,255,0.07)' }}>
+                      <div className="w-7 h-7 rounded-lg flex-shrink-0" style={{ background: '#F5C518' }} />
+                      <span className="text-xs text-white/80 truncate">{item}</span>
+                      <Star size={11} className="ml-auto flex-shrink-0 text-yellow-400" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {/* Floating badge */}
+            <div className="absolute -bottom-4 -right-4 bg-white rounded-2xl shadow-xl p-3 flex items-center gap-2.5 border border-gray-100">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: '#DCFCE7' }}>
+                <Zap size={16} style={{ color: '#16A34A' }} />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-gray-900">Données en direct</div>
+                <div className="text-[11px] text-gray-400">Sync temps réel</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CTA Banner ───────────────────────────────────────────────────── */}
+      <section style={{ background: 'linear-gradient(135deg, #0D3B6E 0%, #185FA5 100%)' }}>
+        <div className="max-w-7xl mx-auto px-5 py-16 text-center">
+          <h2 className="text-2xl md:text-3xl font-black text-white mb-3">
+            Prêt à digitaliser votre agence ?
+          </h2>
+          <p className="text-blue-200 text-sm mb-7">
+            Accédez à votre tableau de bord dès maintenant.
+          </p>
+          <button
+            onClick={() => setShowLogin(true)}
+            className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-2xl text-sm font-black shadow-xl transition-all hover:scale-[1.03] active:scale-[0.98]"
+            style={{ background: '#F5C518', color: '#0D3B6E' }}
+          >
+            Se connecter <ArrowRight size={16} />
+          </button>
+        </div>
+      </section>
+
+      {/* ── Footer ───────────────────────────────────────────────────────── */}
+      <footer className="border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-5 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-400">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: '#185FA5' }}>
+              <span className="text-white text-[8px] font-bold">IG</span>
+            </div>
+            <span>ImmoGest Pro</span>
+          </div>
+          <span>© {new Date().getFullYear()} — Gestion immobilière professionnelle</span>
+          <button
+            onClick={() => setShowLogin(true)}
+            className="font-semibold hover:text-gray-900 transition-colors"
+          >
+            Se connecter →
+          </button>
+        </div>
+      </footer>
+
+      {/* ── Login Modal ──────────────────────────────────────────────────── */}
+      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </div>
   );
 };
