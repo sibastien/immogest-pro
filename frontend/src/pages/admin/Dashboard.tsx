@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Building2, Users, CalendarDays, ArrowRight,
-  BarChart3, Activity, Bed, Bath, Square, Home, Heart,
-  Plus, ArrowUpRight, CheckCircle2,
+  BarChart3, Activity, Bed, Bath, Square, Home,
+  Plus,
 } from 'lucide-react';
 import { Card, CardHeader } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
