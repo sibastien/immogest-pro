@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Building2, Users, CalendarDays, ArrowRight,
   BarChart3, Activity, Bed, Bath, Square, Home,
-  Plus,
+  Plus, Eye, FileText, TrendingUp,
 } from 'lucide-react';
 import { Card, CardHeader } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -20,11 +20,25 @@ const todayLabel = new Date().toLocaleDateString('fr-FR', {
   weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
 });
 
+// Build last-N-months labels + ISO prefixes
+function lastNMonths(n: number) {
+  const result: { label: string; prefix: string }[] = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - i);
+    const prefix = d.toISOString().slice(0, 7); // YYYY-MM
+    const label = d.toLocaleDateString('fr-FR', { month: 'short' });
+    result.push({ label: label.charAt(0).toUpperCase() + label.slice(1), prefix });
+  }
+  return result;
+}
+
 // ─── Main dashboard ───────────────────────────────────────────────────────────
 export const AdminDashboard: React.FC = () => {
   const { properties } = usePropertiesStore();
   const { clients }    = useClientsStore();
-  const { agents, appointments, visits, transactions } = useAgentsStore();
+  const { agents, appointments, visits, transactions, comptesRendus } = useAgentsStore();
 
   const [chartView, setChartView] = useState<'visites' | 'ca'>('visites');
 
@@ -36,40 +50,35 @@ export const AdminDashboard: React.FC = () => {
     a.loadAgents();
     a.loadVisits();
     a.loadTransactions();
+    a.loadComptesRendus();
   }, []);
 
-  // ─── Live Data from Stores ──────────────────────────────────────────────────
-  // Biens en ligne (status 'disponible')
+  // ─── KPI computations ────────────────────────────────────────────────────────
   const activeProperties = properties.filter((p) => p.status === 'disponible').length;
-  // Recent properties added in last 30 days
   const recentPropsAdded = properties.filter((p) => {
     const d = new Date(p.createdAt);
     return !isNaN(d.getTime()) && (Date.now() - d.getTime()) <= 30 * 24 * 60 * 60 * 1000;
   }).length;
 
-  // Total clients & new clients this month
   const totalClients = clients.length;
   const newClientsThisMonth = clients.filter((c) => {
     const d = new Date(c.createdAt);
     return !isNaN(d.getTime()) && (Date.now() - d.getTime()) <= 30 * 24 * 60 * 60 * 1000;
   }).length;
 
-  // Visites totales & aujourd'hui
   const totalVisits = visits.length;
-  const todayVisits = appointments.filter((a) => a.type === 'visite' && a.date === todayISO).length;
+  const todayVisits = visits.filter((v) => v.date === todayISO).length;
 
-  // Transactions
   const totalTransactions = transactions.length;
   const closedTx = transactions.filter((t) => t.stage === 'cloture');
   const caRealise = closedTx.reduce((s, t) => s + t.amount, 0);
   const conversion = totalVisits > 0 ? Math.round((closedTx.length / totalVisits) * 1000) / 10 : 0;
 
-  // Derniers biens ajoutés (triés par date de création descendante)
+  // ─── Latest items ─────────────────────────────────────────────────────────
   const latestProperties = [...properties]
     .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
     .slice(0, 3);
 
-  // Dernières demandes (triées par date de création descendante)
   const latestClients = [...clients]
     .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
     .slice(0, 3);
@@ -78,6 +87,72 @@ export const AdminDashboard: React.FC = () => {
     .filter((a) => a.date === todayISO && a.status !== 'annule')
     .sort((a, b) => a.time.localeCompare(b.time));
 
+  // ─── Monthly chart data (last 6 months) ──────────────────────────────────
+  const months = lastNMonths(6);
+
+  const monthlyVisitData = months.map(({ label, prefix }) => ({
+    label,
+    value: visits.filter((v) => v.date?.startsWith(prefix)).length,
+  }));
+
+  const monthlyCAData = months.map(({ label, prefix }) => ({
+    label,
+    value: transactions
+      .filter((t) => t.stage === 'cloture' && (t.updatedAt || t.createdAt)?.startsWith(prefix))
+      .reduce((s, t) => s + t.amount, 0),
+  }));
+
+  // ─── Activity feed ────────────────────────────────────────────────────────
+  // Merge visits + comptes-rendus + transactions into a unified timeline
+  type FeedItem = {
+    id: string;
+    date: string;
+    icon: 'visit' | 'cr' | 'tx';
+    label: string;
+    sub: string;
+  };
+
+  const feedItems: FeedItem[] = [
+    ...visits.slice(0, 20).map((v) => {
+      const agent = agents.find((a) => a.id === v.agentId);
+      const prop = properties.find((p) => p.id === v.propertyId);
+      const client = clients.find((c) => c.id === v.clientId);
+      return {
+        id: `v-${v.id}`,
+        date: `${v.date}T${v.time || '00:00'}`,
+        icon: 'visit' as const,
+        label: `Visite — ${prop?.title ?? 'Bien inconnu'}`,
+        sub: `${client?.name ?? '—'} · ${agent?.name ?? '—'}`,
+      };
+    }),
+    ...comptesRendus.slice(0, 20).map((cr) => {
+      const agent = agents.find((a) => a.id === cr.agentId);
+      const visit = visits.find((v) => v.id === cr.visitId);
+      const prop = properties.find((p) => p.id === visit?.propertyId);
+      return {
+        id: `cr-${cr.id}`,
+        date: cr.submittedAt || cr.validatedAt || new Date(0).toISOString(),
+        icon: 'cr' as const,
+        label: `Compte rendu — ${prop?.title ?? 'Bien inconnu'}`,
+        sub: `${agent?.name ?? '—'} · ${cr.status === 'valide' ? '✓ Validé' : cr.status === 'soumis' ? 'En attente' : cr.status}`,
+      };
+    }),
+    ...transactions.slice(0, 10).map((tx) => {
+      const agent = agents.find((a) => a.id === tx.agentId);
+      const prop = properties.find((p) => p.id === tx.propertyId);
+      return {
+        id: `tx-${tx.id}`,
+        date: tx.updatedAt || tx.createdAt,
+        icon: 'tx' as const,
+        label: `Transaction ${tx.ref} — ${prop?.title ?? tx.type}`,
+        sub: `${agent?.name ?? '—'} · ${tx.amount.toLocaleString('fr-TN')} DT · ${tx.stage}`,
+      };
+    }),
+  ]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 8);
+
+  // ─── Other data ───────────────────────────────────────────────────────────
   const hasPortfolio = properties.length > 0;
 
   const donutData = [
@@ -113,12 +188,20 @@ export const AdminDashboard: React.FC = () => {
     autre: 'bg-gray-100 text-gray-500',
   };
 
+  const FEED_ICON_STYLES = {
+    visit: { bg: 'bg-blue-50', text: 'text-blue-500', Icon: Eye },
+    cr:    { bg: 'bg-purple-50', text: 'text-purple-500', Icon: FileText },
+    tx:    { bg: 'bg-green-50', text: 'text-green-600', Icon: TrendingUp },
+  };
+
   const teamAgents = agents.filter((a) => ['agent_terrain', 'agent_bureau'].includes(a.role));
   const fmt = (n: number) => n.toLocaleString('fr-TN');
 
+  const hasChartData = totalVisits > 0 || transactions.length > 0;
+
   return (
     <div className="space-y-5">
-      {/* Conception Header */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">Bonjour,</h2>
@@ -126,9 +209,6 @@ export const AdminDashboard: React.FC = () => {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-400 font-medium hidden sm:inline capitalize mr-2">{todayLabel}</span>
-          <button className="px-3.5 py-1.5 border border-gray-200 bg-white rounded-xl text-xs font-medium text-gray-700 hover:bg-gray-50 shadow-sm transition-colors">
-            Ce mois
-          </button>
           <Link
             to="/admin/biens"
             className="px-4 py-1.5 bg-[#F5C518] hover:bg-[#E5B510] text-gray-950 font-bold rounded-xl text-xs shadow-sm transition-all hover:scale-[1.02] flex items-center gap-1.5"
@@ -138,54 +218,60 @@ export const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 4 Conception-matched KPI Cards - 100% Live Data */}
+      {/* 4 KPI Cards — 100% live */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        {/* Biens en ligne */}
         <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-4 flex flex-col justify-between hover:shadow-md transition-shadow">
           <span className="text-xs text-gray-500 font-medium">Biens en ligne</span>
           <div className="flex items-end justify-between mt-2">
             <span className="text-2xl md:text-3xl font-bold text-gray-900">{activeProperties}</span>
             <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-              +{recentPropsAdded}
+              +{recentPropsAdded} ce mois
             </span>
           </div>
+          <span className="text-[11px] text-gray-400 mt-1">{properties.length} biens au total</span>
         </div>
 
-        {/* Nouveaux clients */}
         <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-4 flex flex-col justify-between hover:shadow-md transition-shadow">
-          <span className="text-xs text-gray-500 font-medium">Nouveaux clients</span>
+          <span className="text-xs text-gray-500 font-medium">Clients</span>
           <div className="flex items-end justify-between mt-2">
             <span className="text-2xl md:text-3xl font-bold text-gray-900">{totalClients}</span>
             <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-              +{newClientsThisMonth}
+              +{newClientsThisMonth} ce mois
             </span>
           </div>
+          <span className="text-[11px] text-gray-400 mt-1">
+            {clients.filter((c) => c.status === 'a_relancer').length} à relancer
+          </span>
         </div>
 
-        {/* Visites totales */}
         <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-4 flex flex-col justify-between hover:shadow-md transition-shadow">
-          <span className="text-xs text-gray-500 font-medium">Visites totales</span>
+          <span className="text-xs text-gray-500 font-medium">Visites</span>
           <div className="flex items-end justify-between mt-2">
             <span className="text-2xl md:text-3xl font-bold text-gray-900">{totalVisits}</span>
             <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-              +{todayVisits}
+              +{todayVisits} auj.
             </span>
           </div>
+          <span className="text-[11px] text-gray-400 mt-1">
+            {visits.filter((v) => v.status === 'planifie').length} planifiées
+          </span>
         </div>
 
-        {/* Transactions */}
         <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-4 flex flex-col justify-between hover:shadow-md transition-shadow">
-          <span className="text-xs text-gray-500 font-medium">Transactions</span>
+          <span className="text-xs text-gray-500 font-medium">CA réalisé</span>
           <div className="flex items-end justify-between mt-2">
-            <span className="text-2xl md:text-3xl font-bold text-gray-900">{totalTransactions}</span>
+            <span className="text-2xl md:text-3xl font-bold text-gray-900">
+              {caRealise >= 1000 ? `${(caRealise / 1000).toFixed(0)}K` : fmt(caRealise)}
+            </span>
             <span className="inline-flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-              +{closedTx.length}
+              {closedTx.length} tx
             </span>
           </div>
+          <span className="text-[11px] text-gray-400 mt-1">{totalTransactions} dossiers actifs</span>
         </div>
       </div>
 
-      {/* Conception Showcase Row: Derniers biens ajoutés & Dernières demandes (Live Data) */}
+      {/* Derniers biens + Dernières demandes */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Derniers biens ajoutés (2 cols) */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-200/90 shadow-sm p-5">
@@ -273,7 +359,7 @@ export const AdminDashboard: React.FC = () => {
           )}
         </div>
 
-        {/* Dernières demandes (Live Clients) */}
+        {/* Dernières demandes (live clients) */}
         <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
@@ -351,13 +437,13 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Charts Row */}
       <div className="grid grid-cols-3 gap-5">
-        {/* Performance mensuelle */}
+        {/* Performance mensuelle — last 6 months live */}
         <div className="col-span-2">
           <Card>
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="text-sm font-medium text-gray-900">Performance mensuelle</h3>
-                <p className="text-xs text-gray-400 mt-0.5">Données cumulées</p>
+                <p className="text-xs text-gray-400 mt-0.5">6 derniers mois</p>
               </div>
               <div className="flex bg-gray-100 rounded-lg p-0.5">
                 <button
@@ -381,7 +467,7 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
-            {totalVisits === 0 && transactions.length === 0 ? (
+            {!hasChartData ? (
               <div className="flex flex-col items-center justify-center text-gray-400" style={{ height: 160 }}>
                 <BarChart3 size={32} className="mb-2 opacity-30" />
                 <p className="text-sm">Aucune donnée à afficher</p>
@@ -389,17 +475,17 @@ export const AdminDashboard: React.FC = () => {
               </div>
             ) : chartView === 'visites' ? (
               <BarChart
-                data={[{ label: 'Total', value: totalVisits }]}
+                data={monthlyVisitData}
                 height={160}
                 color="#185FA5"
                 formatValue={(v) => String(v)}
               />
             ) : (
               <BarChart
-                data={[{ label: 'CA', value: caRealise }]}
+                data={monthlyCAData}
                 height={160}
                 color="#3B6D11"
-                formatValue={(v) => `${(v / 1000).toFixed(0)}K`}
+                formatValue={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)}
               />
             )}
 
@@ -458,24 +544,53 @@ export const AdminDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Middle row */}
+      {/* Activity feed + RDV du jour */}
       <div className="grid grid-cols-3 gap-5">
-        {/* Activité récente */}
+        {/* Activité récente — live feed from visits, CRs, transactions */}
         <div className="col-span-2">
           <Card>
             <CardHeader
               title="Activité récente"
+              subtitle="Dernières actions de l'équipe"
               action={
-                <button className="text-xs text-primary flex items-center gap-1 hover:underline">
-                  Tout voir <ArrowRight size={12} />
-                </button>
+                <Link to="/admin/transactions" className="text-xs text-primary flex items-center gap-1 hover:underline">
+                  Transactions <ArrowRight size={12} />
+                </Link>
               }
             />
-            <div className="flex flex-col items-center justify-center text-gray-400 py-12">
-              <Activity size={30} className="mb-2 opacity-30" />
-              <p className="text-sm">Aucune activité récente</p>
-              <p className="text-xs mt-1">Les dernières actions de l'équipe apparaîtront ici</p>
-            </div>
+            {feedItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-gray-400 py-12">
+                <Activity size={30} className="mb-2 opacity-30" />
+                <p className="text-sm">Aucune activité récente</p>
+                <p className="text-xs mt-1">Les dernières actions de l'équipe apparaîtront ici</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-50">
+                {feedItems.map((item) => {
+                  const { bg, text, Icon } = FEED_ICON_STYLES[item.icon];
+                  const dateLabel = (() => {
+                    const d = new Date(item.date);
+                    if (isNaN(d.getTime())) return '';
+                    const diffH = (Date.now() - d.getTime()) / 3600000;
+                    if (diffH < 1) return 'Il y a moins d\'1h';
+                    if (diffH < 24) return `Il y a ${Math.floor(diffH)}h`;
+                    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+                  })();
+                  return (
+                    <div key={item.id} className="flex items-start gap-3 py-2.5 hover:bg-gray-50/50 px-1 rounded-lg transition-colors">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${bg}`}>
+                        <Icon size={14} className={text} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium text-gray-800 truncate">{item.label}</div>
+                        <div className="text-[11px] text-gray-400 truncate">{item.sub}</div>
+                      </div>
+                      <span className="text-[11px] text-gray-400 flex-shrink-0 mt-0.5">{dateLabel}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </Card>
         </div>
 
@@ -483,7 +598,7 @@ export const AdminDashboard: React.FC = () => {
         <Card>
           <CardHeader
             title="RDV aujourd'hui"
-            subtitle={`${todayAppts.length} événements`}
+            subtitle={`${todayAppts.length} événement${todayAppts.length !== 1 ? 's' : ''}`}
             action={<CalendarDays size={15} className="text-gray-400" />}
           />
           <div className="space-y-2">
@@ -516,7 +631,7 @@ export const AdminDashboard: React.FC = () => {
         </Card>
       </div>
 
-      {/* Bottom row */}
+      {/* Bottom row: Pipeline + agents performance */}
       <div className="grid grid-cols-3 gap-5">
         {/* Pipeline résumé */}
         <Card>
@@ -543,15 +658,18 @@ export const AdminDashboard: React.FC = () => {
               </div>
             ))}
           </div>
-          <button className="mt-4 w-full text-xs text-primary text-center py-2 hover:underline flex items-center justify-center gap-1">
+          <Link
+            to="/admin/pipeline"
+            className="mt-4 w-full text-xs text-primary text-center py-2 hover:underline flex items-center justify-center gap-1"
+          >
             Voir le kanban <ArrowRight size={12} />
-          </button>
+          </Link>
         </Card>
 
         {/* Agents performance */}
         <div className="col-span-2">
           <Card>
-            <CardHeader title="Performance agents" subtitle="Équipe" />
+            <CardHeader title="Performance agents" subtitle="Équipe terrain & bureau" />
             {teamAgents.length === 0 ? (
               <div className="flex flex-col items-center justify-center text-gray-400 py-10">
                 <Users size={30} className="mb-2 opacity-30" />
