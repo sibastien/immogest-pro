@@ -33,4 +33,5 @@ uploads/
 *.db-journal
 *.db-wal
 *.db-shm
-
+# Analysis artifacts
+graphify-out/

@@ -6,6 +6,12 @@ import { useAgentsStore } from '../store/agentsStore';
 import { useCallsStore } from '../store/callsStore';
 import { usePropertiesStore } from '../store/propertiesStore';
 
+// Public site
+import { LangProvider } from '../public/LangContext';
+import { PublicHome } from '../public/PublicHome';
+import { PublicListings } from '../public/PublicListings';
+import { PublicPropertyDetail } from '../public/PublicPropertyDetail';
+
 // Layouts
 import { AdminLayout } from '../components/layout/AdminLayout';
 import { CoordinatriceLayout } from '../components/layout/CoordinatriceLayout';
@@ -107,12 +113,18 @@ const RequireAuth: React.FC<{ allowedRoles?: string[] }> = ({ allowedRoles }) =>
   return <Outlet />;
 };
 
-// Root redirect
+// Root redirect — authenticated users go to their dashboard, others see the public site.
 const RootRedirect: React.FC = () => {
   const { isAuthenticated, user } = useAuthStore();
-  if (!isAuthenticated || !user) return <Navigate to="/login" replace />;
-  if (user.role === 'superadmin') return <Navigate to="/superadmin" replace />;
-  return <Navigate to={dashboardPathByRole[user.role]} replace />;
+  if (isAuthenticated && user) {
+    if (user.role === 'superadmin') return <Navigate to="/superadmin" replace />;
+    return <Navigate to={dashboardPathByRole[user.role]} replace />;
+  }
+  return (
+    <LangProvider>
+      <PublicHome />
+    </LangProvider>
+  );
 };
 
 export const router = createBrowserRouter([
@@ -120,9 +132,19 @@ export const router = createBrowserRouter([
     path: '/login',
     element: <Login />,
   },
+
+  // ── Public real estate site (no auth) ──
   {
     path: '/',
     element: <RootRedirect />,
+  },
+  {
+    path: '/proprietes',
+    element: <LangProvider><PublicListings /></LangProvider>,
+  },
+  {
+    path: '/proprietes/:id',
+    element: <LangProvider><PublicPropertyDetail /></LangProvider>,
   },
 
   // SUPER-ADMIN (SaaS Owner Console)

@@ -10,6 +10,9 @@ app.use(express.json({ limit: '5mb' }));
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
+// Public routes (no auth) — property listings & inquiry for the public site.
+app.use('/api/public', require('./routes/public'));
+
 // Serve uploaded files (property photos, documents).
 app.use('/api/uploads', express.static(UPLOAD_DIR));
 
