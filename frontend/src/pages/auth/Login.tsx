@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Eye, EyeOff, Building2, Users, TrendingUp, ArrowRight,
-  Sparkles, Check, Shield, ChevronRight, Home, Phone,
-  BarChart3, Lock, Mail, User, Briefcase
+  Sparkles, Check, Shield, Home, Phone,
+  Lock, Mail, User
 } from 'lucide-react';
 import { useAuthStore, dashboardPathByRole } from '../../store/authStore';
 
