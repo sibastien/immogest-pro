@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LogOut, Settings, X, Shield } from 'lucide-react';
+import { LogOut, Settings, X, Shield, Globe, ExternalLink } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { Avatar } from '../ui/Avatar';
@@ -82,6 +82,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
+      {/* View public site button */}
+      <div className="px-3 pt-3 pb-1">
+        <button
+          onClick={() => { navigate('/'); onMobileClose?.(); }}
+          className="w-full flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-white bg-white/10 hover:bg-white/15 border border-white/15 shadow-sm transition-all group hover:border-[#F5C518]/40"
+          title="Accéder au site public vitrine"
+        >
+          <div className="flex items-center gap-2.5">
+            <Globe size={16} className="text-[#F5C518] flex-shrink-0" />
+            <span>Voir mon site</span>
+          </div>
+          <ExternalLink size={13} className="text-blue-200 group-hover:text-white transition-colors" />
+        </button>
+      </div>
+
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         {navItems.map((item) => (
@@ -136,6 +151,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span>Paramètres</span>
           </button>
         )}
+        <button
+          onClick={() => { navigate('/'); onMobileClose?.(); }}
+          className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm text-blue-200 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          <Globe size={18} />
+          <span>Voir le site</span>
+        </button>
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3.5 py-2 rounded-xl text-sm text-blue-200 hover:text-red-300 hover:bg-red-500/15 transition-colors"

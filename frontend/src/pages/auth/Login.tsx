@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Eye, EyeOff, Building2, Users, TrendingUp, ArrowRight,
   Sparkles, Check, Shield, Home, Phone,
-  Lock, Mail, User
+  Lock, Mail, User, Globe
 } from 'lucide-react';
 import { useAuthStore, dashboardPathByRole } from '../../store/authStore';
 
@@ -161,9 +161,74 @@ export const Login: React.FC = () => {
         .panel-logo {
           display: flex;
           align-items: center;
+          justify-content: space-between;
           gap: 12px;
           position: relative;
           z-index: 1;
+        }
+        .panel-view-site-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 14px;
+          border-radius: 9999px;
+          font-size: 12px;
+          font-weight: 600;
+          color: #ffffff;
+          background: rgba(255, 255, 255, 0.12);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .panel-view-site-pill:hover {
+          background: rgba(255, 255, 255, 0.22);
+          border-color: #F5C518;
+          color: #F5C518;
+        }
+        .view-site-top-btn {
+          position: fixed;
+          top: 18px;
+          right: 22px;
+          z-index: 50;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          border-radius: 9999px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #0D3B6E;
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(8px);
+          border: 1px solid rgba(13, 59, 110, 0.14);
+          box-shadow: 0 4px 14px rgba(13, 59, 110, 0.08);
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .view-site-top-btn:hover {
+          background: #ffffff;
+          transform: translateY(-1px);
+          box-shadow: 0 6px 18px rgba(13, 59, 110, 0.14);
+          border-color: #185FA5;
+          color: #185FA5;
+        }
+        .mobile-view-site-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 5px 12px;
+          border-radius: 9999px;
+          font-size: 12px;
+          font-weight: 600;
+          color: #185FA5;
+          background: #EFF6FF;
+          border: 1px solid #BFDBFE;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .mobile-view-site-btn:hover {
+          background: #DBEAFE;
+          border-color: #93C5FD;
         }
         .panel-logo-mark {
           width: 44px; height: 44px;
@@ -282,8 +347,8 @@ export const Login: React.FC = () => {
 
         /* Mobile logo */
         .mobile-logo {
-          display: flex; align-items: center; justify-content: center;
-          gap: 10px; padding: 28px 28px 0;
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 10px; padding: 24px 24px 0;
         }
         @media (min-width: 1024px) { .mobile-logo { display: none; } }
         .mobile-logo-mark {
@@ -454,17 +519,40 @@ export const Login: React.FC = () => {
       `}</style>
 
       <div className="login-root">
+        {/* Floating Top-Right View Site Button */}
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          className="view-site-top-btn"
+          title="Accéder au site public vitrine"
+        >
+          <Globe size={15} color="#185FA5" />
+          <span>Voir mon site</span>
+          <ArrowRight size={13} color="#64748B" />
+        </button>
+
         {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
         <div className="panel-left">
           <div className="panel-grid" />
 
-          {/* Logo */}
+          {/* Logo & View Site */}
           <div className="panel-logo">
-            <div className="panel-logo-mark">IG</div>
-            <div>
-              <div className="panel-logo-name">ImmoGest Pro</div>
-              <div className="panel-logo-sub">Plateforme CRM Immobilier</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div className="panel-logo-mark">IG</div>
+              <div>
+                <div className="panel-logo-name">ImmoGest Pro</div>
+                <div className="panel-logo-sub">Plateforme CRM Immobilier</div>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => navigate('/')}
+              className="panel-view-site-pill"
+              title="Accéder au site public vitrine"
+            >
+              <Globe size={14} />
+              <span>Voir mon site</span>
+            </button>
           </div>
 
           {/* Body */}
@@ -521,8 +609,19 @@ export const Login: React.FC = () => {
 
             {/* Mobile logo (only on small screens) */}
             <div className="mobile-logo">
-              <div className="mobile-logo-mark">IG</div>
-              <div className="mobile-logo-name">ImmoGest Pro</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div className="mobile-logo-mark">IG</div>
+                <div className="mobile-logo-name">ImmoGest Pro</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="mobile-view-site-btn"
+                title="Accéder au site public vitrine"
+              >
+                <Globe size={13} />
+                <span>Voir mon site</span>
+              </button>
             </div>
 
             {/* Tabs */}

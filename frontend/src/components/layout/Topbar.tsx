@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Bell, Search, X, Building2, Users, User, ArrowRight, LogOut, ChevronDown, Shield, Menu } from 'lucide-react';
+import { Bell, Search, X, Building2, Users, User, ArrowRight, LogOut, ChevronDown, Shield, Menu, Globe } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { usePropertiesStore } from '../../store/propertiesStore';
@@ -140,6 +140,16 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions, onMenu
       </div>
 
       {actions && <div className="flex items-center gap-2">{actions}</div>}
+
+      {/* Voir mon site button */}
+      <button
+        onClick={() => navigate('/')}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#0D3B6E] bg-white border border-gray-200 hover:bg-gray-50 hover:border-primary/40 shadow-sm transition-all flex-shrink-0"
+        title="Accéder au site public vitrine"
+      >
+        <Globe size={14} className="text-[#185FA5]" />
+        <span className="hidden sm:inline">Voir mon site</span>
+      </button>
 
       {/* Search trigger */}
       <div ref={searchRef} className="relative">
@@ -286,6 +296,13 @@ export const Topbar: React.FC<TopbarProps> = ({ title, subtitle, actions, onMenu
 
             {/* Actions */}
             <div className="py-1">
+              <button
+                onClick={() => { navigate('/'); setProfileOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Globe size={15} className="text-[#185FA5]" />
+                Voir le site public
+              </button>
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-danger hover:bg-danger-light transition-colors"

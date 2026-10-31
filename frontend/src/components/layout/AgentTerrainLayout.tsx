@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { MobileNav } from './MobileNav';
-import { Bell, LogOut } from 'lucide-react';
+import { Bell, LogOut, Globe } from 'lucide-react';
 import { Home, MapPin, Phone, Users, TrendingUp, Building2 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { Avatar } from '../ui/Avatar';
@@ -37,6 +37,14 @@ export const AgentTerrainLayout: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 rounded-lg transition-colors"
+            title="Voir mon site"
+          >
+            <Globe size={14} />
+            <span className="text-[11px]">Site</span>
+          </button>
           <button className="relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-gray-100">
             <Bell size={20} className="text-gray-500" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full" />
