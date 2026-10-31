@@ -1,27 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Eye, EyeOff, X, Building2, Users, CalendarCheck,
-  BarChart3, CheckCircle, ArrowRight, Shield, Zap,
-  MapPin, Phone, FileText, Star, Sparkles, Check
+  Eye, EyeOff, Building2, Users, TrendingUp, ArrowRight,
+  Sparkles, Check, Shield, ChevronRight, Home, Phone,
+  BarChart3, Lock, Mail, User, Briefcase
 } from 'lucide-react';
 import { useAuthStore, dashboardPathByRole } from '../../store/authStore';
 
-// ── Auth Modal (Login + SaaS Agency Registration) ────────────────────────────
-interface AuthModalProps {
-  initialMode?: 'login' | 'register';
-  onClose: () => void;
-}
+// ── Animated stat counter ─────────────────────────────────────────────────────
+const StatCard: React.FC<{ icon: React.ElementType; value: string; label: string; delay?: number }> = ({
+  icon: Icon, value, label, delay = 0,
+}) => (
+  <div
+    className="stat-card"
+    style={{ animationDelay: `${delay}ms` }}
+  >
+    <div className="stat-icon">
+      <Icon size={15} />
+    </div>
+    <div>
+      <div className="stat-value">{value}</div>
+      <div className="stat-label">{label}</div>
+    </div>
+  </div>
+);
 
-const AuthModal: React.FC<AuthModalProps> = ({ initialMode = 'login', onClose }) => {
+// ── Main Login / Register page ─────────────────────────────────────────────────
+export const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, register } = useAuthStore();
-  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
+  const { login, register, isAuthenticated, user } = useAuthStore();
+
+  const [mode, setMode] = useState<'login' | 'register'>('login');
 
   // Login state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [showLoginPass, setShowLoginPass] = useState(false);
 
   // Register state
   const [agencyName, setAgencyName] = useState('');
@@ -29,18 +43,26 @@ const AuthModal: React.FC<AuthModalProps> = ({ initialMode = 'login', onClose })
   const [registerEmail, setRegisterEmail] = useState('');
   const [registerPhone, setRegisterPhone] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
+  const [showRegPass, setShowRegPass] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  // Close on Escape
+  // Redirect already-authenticated users
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
+    if (isAuthenticated && user) {
+      navigate(dashboardPathByRole[user.role], { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
-  const handleLoginSubmit = async (e: React.FormEvent) => {
+  const switchMode = (m: 'login' | 'register') => {
+    setMode(m);
+    setError('');
+    setSuccess('');
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginEmail || !loginPassword) return;
     setLoading(true);
@@ -49,15 +71,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ initialMode = 'login', onClose })
     setLoading(false);
     if (result.success) {
       const role = useAuthStore.getState().user?.role;
-      if (role) navigate(dashboardPathByRole[role]);
+      if (role) navigate(dashboardPathByRole[role], { replace: true });
     } else {
       setError(result.error ?? 'Identifiants incorrects. Réessayez.');
     }
   };
 
-  const handleRegisterSubmit = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!agencyName || !adminName || !registerEmail || !registerPassword) return;
+    if (!agencyName || !adminName || !registerEmail || registerPassword.length < 6) return;
     setLoading(true);
     setError('');
     const result = await register({
@@ -69,712 +91,700 @@ const AuthModal: React.FC<AuthModalProps> = ({ initialMode = 'login', onClose })
     });
     setLoading(false);
     if (result.success) {
-      navigate('/admin');
+      navigate('/admin', { replace: true });
     } else {
       setError(result.error ?? 'Erreur lors de la création du compte.');
     }
   };
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
-      style={{ background: 'rgba(13, 59, 110, 0.65)', backdropFilter: 'blur(8px)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-8">
-        {/* Modal header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm" style={{ background: '#185FA5' }}>
-              <span className="text-white text-base font-bold">IG</span>
-            </div>
-            <div>
-              <div className="text-base font-bold text-gray-900">ImmoGest Pro</div>
-              <div className="text-xs text-gray-400">
-                {mode === 'login' ? 'Connexion à votre agence' : 'Créer votre agence SaaS'}
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* Tab switcher */}
-        <div className="flex p-1.5 mx-6 mt-4 bg-gray-100/80 rounded-xl">
-          <button
-            type="button"
-            onClick={() => { setMode('login'); setError(''); }}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-              mode === 'login'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Se connecter
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode('register'); setError(''); }}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-              mode === 'register'
-                ? 'bg-white text-blue-700 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <Sparkles size={13} className="text-amber-500" />
-            Créer mon agence
-          </button>
-        </div>
-
-        {error && (
-          <div className="mx-6 mt-4 px-3 py-2.5 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
-            {error}
-          </div>
-        )}
-
-        {/* ── Form: Login ── */}
-        {mode === 'login' && (
-          <form onSubmit={handleLoginSubmit} autoComplete="off" className="p-6 space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Adresse email</label>
-              <input
-                type="email"
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="admin@immogest.pro"
-                required
-                autoComplete="off"
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-blue-400 transition-all"
-                style={{ '--tw-ring-color': '#185FA5' } as React.CSSProperties}
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                Mot de passe / Code d'accès
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  autoComplete="new-password"
-                  className="w-full px-3.5 py-2.5 pr-10 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-blue-400 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading || !loginEmail || !loginPassword}
-              className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-95 active:scale-[0.98] shadow-md shadow-blue-900/10"
-              style={{ background: 'linear-gradient(135deg, #0D3B6E 0%, #185FA5 100%)' }}
-            >
-              {loading ? 'Connexion en cours…' : 'Accéder à mon espace'}
-            </button>
-
-            <div className="pt-2 text-center">
-              <span className="text-xs text-gray-500">Pas encore d'agence ? </span>
-              <button
-                type="button"
-                onClick={() => { setMode('register'); setError(''); }}
-                className="text-xs font-bold text-blue-600 hover:underline"
-              >
-                Créer une agence (14j gratuits)
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* ── Form: Register (SaaS Onboarding) ── */}
-        {mode === 'register' && (
-          <form onSubmit={handleRegisterSubmit} autoComplete="off" className="p-6 space-y-3.5">
-            <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3 flex items-center gap-2.5">
-              <Sparkles size={18} className="text-amber-500 flex-shrink-0" />
-              <div className="text-xs text-blue-900">
-                <span className="font-bold">Essai gratuit 14 jours</span> complet et sans engagement ni carte bancaire.
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Nom de votre agence *</label>
-              <input
-                type="text"
-                value={agencyName}
-                onChange={(e) => setAgencyName(e.target.value)}
-                placeholder="Ex: Carthage Prestige Immobilier"
-                required
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-blue-400 transition-all"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Votre nom *</label>
-                <input
-                  type="text"
-                  value={adminName}
-                  onChange={(e) => setAdminName(e.target.value)}
-                  placeholder="Jean Dupont"
-                  required
-                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-blue-400 transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Téléphone</label>
-                <input
-                  type="tel"
-                  value={registerPhone}
-                  onChange={(e) => setRegisterPhone(e.target.value)}
-                  placeholder="+216 71 000 000"
-                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-blue-400 transition-all"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Email professionnel *</label>
-              <input
-                type="email"
-                value={registerEmail}
-                onChange={(e) => setRegisterEmail(e.target.value)}
-                placeholder="contact@carthage-immo.tn"
-                required
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-blue-400 transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Mot de passe administrateur *</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={registerPassword}
-                  onChange={(e) => setRegisterPassword(e.target.value)}
-                  placeholder="Au moins 6 caractères"
-                  minLength={6}
-                  required
-                  className="w-full px-3.5 py-2.5 pr-10 border border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-blue-400 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading || !agencyName || !adminName || !registerEmail || registerPassword.length < 6}
-              className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-95 active:scale-[0.98] shadow-md shadow-blue-900/10"
-              style={{ background: 'linear-gradient(135deg, #185FA5 0%, #1E7FC4 100%)' }}
-            >
-              {loading ? 'Création de votre espace…' : 'Démarrer mon agence'}
-            </button>
-
-            <p className="text-[11px] text-gray-400 text-center leading-relaxed">
-              En créant votre agence, vous acceptez nos conditions d'utilisation SaaS.
-            </p>
-          </form>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// ── Landing page data ─────────────────────────────────────────────────────────
-const FEATURES = [
-  {
-    icon: Building2,
-    color: '#185FA5',
-    bg: '#DBEAFE',
-    title: 'Catalogue de biens',
-    desc: 'Gérez votre portefeuille immobilier — vente, location, terrain, commercial. Photos, prix, statuts, mandats.',
-  },
-  {
-    icon: Users,
-    color: '#7C3AED',
-    bg: '#EDE9FE',
-    title: 'Gestion des clients',
-    desc: 'Fiches prospects enrichies, suivi du pipeline, historique des contacts et alertes de relance automatiques.',
-  },
-  {
-    icon: CalendarCheck,
-    color: '#16A34A',
-    bg: '#DCFCE7',
-    title: 'Planification des visites',
-    desc: 'Agenda partagé, assignation aux agents terrain, bons de visite numériques et comptes rendus structurés.',
-  },
-  {
-    icon: BarChart3,
-    color: '#D97706',
-    bg: '#FEF3C7',
-    title: 'Rapports & Performance',
-    desc: 'Tableaux de bord en temps réel, CA mensuel, taux de conversion et classement agents en direct.',
-  },
-  {
-    icon: MapPin,
-    color: '#0F766E',
-    bg: '#CCFBF1',
-    title: 'Suivi terrain',
-    desc: 'Application responsive pour agents terrain : visites GPS, compte rendu photo, statut en temps réel.',
-  },
-  {
-    icon: FileText,
-    color: '#DC2626',
-    bg: '#FEE2E2',
-    title: 'Documents & Transactions',
-    desc: 'Pipeline de vente Kanban, gestion des compromis, actes et commissions avec export PDF instantané.',
-  },
-];
-
-const ROLES = [
-  { role: 'Admin', color: '#185FA5', desc: 'Vision globale, équipe, biens, transactions, abonnement agence.' },
-  { role: 'Coordinatrice', color: '#7C3AED', desc: 'Dispatch, planning agents, validation des comptes rendus.' },
-  { role: 'Agent bureau', color: '#D97706', desc: 'Prospects, appels, catalogue, agenda personnel.' },
-  { role: 'Agent terrain', color: '#16A34A', desc: 'Visites, comptes rendus, clients assignés, performance.' },
-  { role: 'Client', color: '#0F766E', desc: 'Suivi de dossier, documents, rendez-vous.' },
-];
-
-const PLANS = [
-  {
-    name: 'Starter',
-    price: '99',
-    period: 'DT / mois',
-    desc: 'Idéal pour les agences indépendantes qui démarrent.',
-    features: [
-      'Jusqu’à 2 agents',
-      'Jusqu’à 15 biens actifs',
-      'Catalogue & fiches clients',
-      'Bons de visite numériques',
-      'Support par email',
-    ],
-    highlight: false,
-    cta: 'Démarrer l’essai',
-  },
-  {
-    name: 'Pro',
-    badge: 'Recommandé',
-    price: '199',
-    period: 'DT / mois',
-    desc: 'Pour les agences en forte croissance cherchant l’efficacité.',
-    features: [
-      'Jusqu’à 10 agents',
-      'Jusqu’à 100 biens actifs',
-      'Pipeline de vente Kanban',
-      'Comptes rendus photos géolocalisés',
-      'Statistiques & rapports avancés',
-      'Gestion électronique des documents',
-      'Support prioritaire 7j/7',
-    ],
-    highlight: true,
-    cta: 'Essai gratuit 14 jours',
-  },
-  {
-    name: 'Entreprise',
-    price: '399',
-    period: 'DT / mois',
-    desc: 'Pour les réseaux d’agences et grands cabinets immobiliers.',
-    features: [
-      'Agents & biens illimités',
-      'Multi-agences & filiales',
-      'Accès API & exports personnalisés',
-      'Domaine personnalisé sur mesure',
-      'Gestionnaire de compte dédié',
-      'Formation de votre équipe offerte',
-    ],
-    highlight: false,
-    cta: 'Contacter l’équipe',
-  },
-];
-
-const STATS = [
-  { value: 'Multi-Tenant', label: 'Espace sécurisé isolé', icon: Shield },
-  { value: '100%', label: 'Données en direct', icon: Zap },
-  { value: '14 Jours', label: 'Essai gratuit offert', icon: Sparkles },
-  { value: '24/7', label: 'Accessible partout', icon: Phone },
-];
-
-// ── Main showcase & SaaS landing page ─────────────────────────────────────────
-export const Login: React.FC = () => {
-  const [modalMode, setModalMode] = useState<'login' | 'register' | null>(null);
-  const { isAuthenticated, user } = useAuthStore();
-  const navigate = useNavigate();
-
-  // If already logged in, redirect immediately
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      navigate(dashboardPathByRole[user.role]);
-    }
-  }, [isAuthenticated, user, navigate]);
+  const loginValid = loginEmail.includes('@') && loginPassword.length >= 1;
+  const registerValid = agencyName.trim().length >= 2 && adminName.trim().length >= 2
+    && registerEmail.includes('@') && registerPassword.length >= 6;
 
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-      {/* ── Navbar ───────────────────────────────────────────────────────── */}
-      <header
-        className="sticky top-0 z-40 border-b border-gray-100"
-        style={{ background: 'rgba(255,255,255,0.94)', backdropFilter: 'blur(12px)' }}
-      >
-        <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        .login-root {
+          min-height: 100vh;
+          display: flex;
+          font-family: 'Inter', system-ui, sans-serif;
+          background: #F0F4FA;
+        }
+
+        /* ── Left panel ───────────────────────────────────────────────── */
+        .panel-left {
+          display: none;
+          flex: 1;
+          position: relative;
+          overflow: hidden;
+          background: linear-gradient(145deg, #071D3A 0%, #0D3B6E 45%, #185FA5 100%);
+          padding: 48px 44px;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+        @media (min-width: 1024px) { .panel-left { display: flex; } }
+
+        /* Geometric decorations */
+        .panel-left::before {
+          content: '';
+          position: absolute;
+          top: -120px; right: -120px;
+          width: 400px; height: 400px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(245,197,24,0.12) 0%, transparent 70%);
+          pointer-events: none;
+        }
+        .panel-left::after {
+          content: '';
+          position: absolute;
+          bottom: -80px; left: -80px;
+          width: 320px; height: 320px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(30,127,196,0.2) 0%, transparent 70%);
+          pointer-events: none;
+        }
+
+        .panel-grid {
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+          background-size: 48px 48px;
+          pointer-events: none;
+        }
+
+        .panel-logo {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          position: relative;
+          z-index: 1;
+        }
+        .panel-logo-mark {
+          width: 44px; height: 44px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #F5C518 0%, #E8A800 100%);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 15px; font-weight: 900; color: #0D3B6E;
+          box-shadow: 0 4px 16px rgba(245,197,24,0.35);
+          flex-shrink: 0;
+        }
+        .panel-logo-name {
+          font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.3px;
+        }
+        .panel-logo-sub {
+          font-size: 11px; font-weight: 600;
+          color: rgba(255,255,255,0.45);
+          letter-spacing: 0.05em; text-transform: uppercase;
+        }
+
+        .panel-body {
+          position: relative; z-index: 1; flex: 1;
+          display: flex; flex-direction: column; justify-content: center;
+          padding: 20px 0;
+        }
+        .panel-eyebrow {
+          display: inline-flex; align-items: center; gap: 8px;
+          background: rgba(245,197,24,0.15);
+          border: 1px solid rgba(245,197,24,0.25);
+          border-radius: 100px;
+          padding: 6px 14px;
+          font-size: 11px; font-weight: 700;
+          color: #F5C518; letter-spacing: 0.06em; text-transform: uppercase;
+          width: fit-content; margin-bottom: 20px;
+        }
+        .panel-eyebrow-dot {
+          width: 6px; height: 6px; border-radius: 50%;
+          background: #F5C518;
+          animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        .panel-headline {
+          font-size: 36px; font-weight: 900; color: #fff;
+          line-height: 1.15; letter-spacing: -0.8px;
+          margin-bottom: 14px;
+        }
+        .panel-headline span { color: #F5C518; }
+
+        .panel-sub {
+          font-size: 14px; color: rgba(255,255,255,0.55);
+          line-height: 1.65; max-width: 360px; margin-bottom: 36px;
+        }
+
+        /* Feature list */
+        .feature-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 40px; }
+        .feature-item {
+          display: flex; align-items: center; gap: 12px;
+        }
+        .feature-check {
+          width: 22px; height: 22px; border-radius: 50%;
+          background: rgba(245,197,24,0.15);
+          border: 1px solid rgba(245,197,24,0.3);
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0;
+        }
+        .feature-text { font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 500; }
+
+        /* Stats */
+        .stats-grid {
+          display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+        }
+        .stat-card {
+          display: flex; align-items: center; gap: 10px;
+          background: rgba(255,255,255,0.07);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 14px; padding: 14px 16px;
+          backdrop-filter: blur(12px);
+          animation: fadeUp 0.5s ease both;
+        }
+        @keyframes fadeUp {
+          from { opacity:0; transform:translateY(10px); }
+          to { opacity:1; transform:translateY(0); }
+        }
+        .stat-icon {
+          width: 34px; height: 34px; border-radius: 9px;
+          background: rgba(245,197,24,0.15);
+          border: 1px solid rgba(245,197,24,0.2);
+          display: flex; align-items: center; justify-content: center;
+          color: #F5C518; flex-shrink: 0;
+        }
+        .stat-value { font-size: 15px; font-weight: 800; color: #fff; }
+        .stat-label { font-size: 10px; color: rgba(255,255,255,0.45); font-weight: 500; }
+
+        /* Panel footer */
+        .panel-footer { position: relative; z-index: 1; }
+        .panel-footer-text {
+          font-size: 11px; color: rgba(255,255,255,0.3); font-weight: 500;
+        }
+
+        /* ── Right panel (form) ────────────────────────────────────────── */
+        .panel-right {
+          display: flex; flex: 0 0 100%;
+          align-items: center; justify-content: center;
+          padding: 24px 16px;
+          min-height: 100vh;
+        }
+        @media (min-width: 1024px) { .panel-right { flex: 0 0 480px; } }
+
+        .form-card {
+          width: 100%; max-width: 420px;
+          background: #fff;
+          border-radius: 24px;
+          box-shadow: 0 20px 60px rgba(13,59,110,0.12), 0 4px 16px rgba(13,59,110,0.06);
+          overflow: hidden;
+        }
+
+        /* Mobile logo */
+        .mobile-logo {
+          display: flex; align-items: center; justify-content: center;
+          gap: 10px; padding: 28px 28px 0;
+        }
+        @media (min-width: 1024px) { .mobile-logo { display: none; } }
+        .mobile-logo-mark {
+          width: 38px; height: 38px; border-radius: 10px;
+          background: linear-gradient(135deg, #0D3B6E 0%, #185FA5 100%);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 13px; font-weight: 900; color: #fff;
+        }
+        .mobile-logo-name { font-size: 18px; font-weight: 800; color: #0D3B6E; }
+
+        /* Tabs */
+        .tabs-wrap { padding: 20px 24px 0; }
+        .tabs {
+          display: flex;
+          background: #F1F5FB;
+          border-radius: 12px;
+          padding: 4px;
+        }
+        .tab {
+          flex: 1; padding: 9px 6px;
+          border: none; border-radius: 9px; cursor: pointer;
+          font-size: 13px; font-weight: 700;
+          transition: all 0.2s ease;
+          display: flex; align-items: center; justify-content: center; gap: 6px;
+          background: transparent; color: #8A9AB5;
+        }
+        .tab.active {
+          background: #fff;
+          color: #0D3B6E;
+          box-shadow: 0 2px 8px rgba(13,59,110,0.1);
+        }
+
+        /* Form area */
+        .form-body { padding: 20px 24px 28px; }
+
+        .form-title { font-size: 20px; font-weight: 800; color: #0D3B6E; margin-bottom: 4px; }
+        .form-subtitle { font-size: 13px; color: #8A9AB5; margin-bottom: 20px; }
+
+        /* Trial badge */
+        .trial-badge {
+          display: flex; align-items: center; gap: 10px;
+          background: linear-gradient(135deg, #EFF8FF 0%, #F0F9FF 100%);
+          border: 1px solid #BFDBFE;
+          border-radius: 12px; padding: 10px 14px;
+          margin-bottom: 18px;
+        }
+        .trial-badge-icon {
+          width: 30px; height: 30px; border-radius: 8px;
+          background: #DBEAFE; display: flex;
+          align-items: center; justify-content: center;
+          color: #185FA5; flex-shrink: 0;
+        }
+        .trial-badge-text { font-size: 12px; color: #1E40AF; }
+        .trial-badge-text strong { font-weight: 700; }
+
+        /* Field */
+        .field { margin-bottom: 14px; }
+        .field-label {
+          display: block;
+          font-size: 12px; font-weight: 700; color: #374151;
+          margin-bottom: 5px;
+        }
+        .field-input-wrap { position: relative; }
+        .field-input {
+          width: 100%; padding: 10px 14px 10px 38px;
+          border: 1.5px solid #E5EAF2;
+          border-radius: 10px;
+          font-size: 14px; color: #111827;
+          background: #FAFBFC;
+          outline: none;
+          transition: all 0.2s ease;
+          font-family: 'Inter', system-ui, sans-serif;
+        }
+        .field-input::placeholder { color: #B4BFCC; }
+        .field-input:focus {
+          border-color: #185FA5;
+          background: #fff;
+          box-shadow: 0 0 0 3px rgba(24,95,165,0.1);
+        }
+        .field-icon {
+          position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+          color: #B4BFCC; pointer-events: none;
+        }
+        .field-input:focus ~ .field-icon, .field-input-wrap:focus-within .field-icon {
+          color: #185FA5;
+        }
+        .toggle-pass {
+          position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+          background: none; border: none; cursor: pointer;
+          color: #B4BFCC; padding: 4px;
+          display: flex; align-items: center;
+          transition: color 0.2s;
+        }
+        .toggle-pass:hover { color: #185FA5; }
+
+        /* 2-col grid */
+        .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        /* Error / success */
+        .alert {
+          border-radius: 10px; padding: 10px 13px;
+          font-size: 12px; font-weight: 600;
+          margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+        }
+        .alert-error { background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626; }
+        .alert-success { background: #F0FDF4; border: 1px solid #BBF7D0; color: #16A34A; }
+
+        /* Submit */
+        .btn-submit {
+          width: 100%; padding: 12px;
+          border: none; border-radius: 12px;
+          font-size: 14px; font-weight: 800;
+          color: #fff; cursor: pointer;
+          background: linear-gradient(135deg, #0D3B6E 0%, #185FA5 100%);
+          box-shadow: 0 4px 16px rgba(13,59,110,0.25);
+          transition: all 0.2s ease;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          font-family: 'Inter', system-ui, sans-serif;
+        }
+        .btn-submit:hover:not(:disabled) {
+          box-shadow: 0 6px 20px rgba(13,59,110,0.35);
+          transform: translateY(-1px);
+        }
+        .btn-submit:active:not(:disabled) { transform: translateY(0); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Switch mode */
+        .switch-link {
+          text-align: center; margin-top: 14px;
+          font-size: 12px; color: #8A9AB5;
+        }
+        .switch-link button {
+          background: none; border: none; cursor: pointer;
+          color: #185FA5; font-weight: 700; font-size: 12px;
+          margin-left: 4px; padding: 0;
+          font-family: 'Inter', system-ui, sans-serif;
+        }
+        .switch-link button:hover { text-decoration: underline; }
+
+        /* Security badge */
+        .security-strip {
+          border-top: 1px solid #F1F5FB;
+          padding: 10px 24px 16px;
+          display: flex; align-items: center; justify-content: center; gap: 6px;
+          color: #B4BFCC; font-size: 11px; font-weight: 600;
+        }
+        .security-strip span { color: #C6D2E0; }
+
+        /* spinner */
+        .spinner {
+          width: 16px; height: 16px;
+          border: 2px solid rgba(255,255,255,0.4);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Password strength */
+        .pw-strength { display: flex; gap: 4px; margin-top: 5px; }
+        .pw-bar {
+          height: 3px; flex: 1; border-radius: 2px;
+          background: #E5EAF2; transition: background 0.3s;
+        }
+        .pw-bar.weak { background: #EF4444; }
+        .pw-bar.medium { background: #F59E0B; }
+        .pw-bar.strong { background: #10B981; }
+      `}</style>
+
+      <div className="login-root">
+        {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
+        <div className="panel-left">
+          <div className="panel-grid" />
+
           {/* Logo */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm" style={{ background: '#185FA5' }}>
-              <span className="text-white text-xs font-bold">IG</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-gray-900 text-base tracking-tight">ImmoGest Pro</span>
-              <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
-                SaaS
-              </span>
+          <div className="panel-logo">
+            <div className="panel-logo-mark">IG</div>
+            <div>
+              <div className="panel-logo-name">ImmoGest Pro</div>
+              <div className="panel-logo-sub">Plateforme CRM Immobilier</div>
             </div>
           </div>
 
-          {/* Nav links */}
-          <nav className="hidden md:flex items-center gap-6 text-sm text-gray-500 font-medium">
-            <a href="#features" className="hover:text-gray-900 transition-colors">Fonctionnalités</a>
-            <a href="#pricing" className="hover:text-gray-900 transition-colors font-semibold text-blue-600">Tarifs</a>
-            <a href="#roles" className="hover:text-gray-900 transition-colors">Rôles</a>
-            <a href="#about" className="hover:text-gray-900 transition-colors">À propos</a>
-          </nav>
-
-          {/* CTAs */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setModalMode('login')}
-              className="text-sm font-semibold text-gray-700 hover:text-blue-600 transition-colors px-3 py-2"
-            >
-              Se connecter
-            </button>
-            <button
-              onClick={() => setModalMode('register')}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white shadow-sm transition-all hover:opacity-95 hover:shadow-md active:scale-[0.97]"
-              style={{ background: 'linear-gradient(135deg, #185FA5 0%, #1E7FC4 100%)' }}
-            >
-              <Sparkles size={14} className="text-amber-300" />
-              Essai gratuit
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0D3B6E 0%, #185FA5 55%, #1E7FC4 100%)' }}>
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-10" style={{ background: '#F5C518' }} />
-          <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-5" style={{ background: 'white' }} />
-          <div className="absolute top-1/2 left-1/3 w-px h-64 opacity-10" style={{ background: 'white' }} />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-5 py-20 md:py-28 text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6 border border-white/20" style={{ background: 'rgba(255,255,255,0.1)', color: '#F5C518' }}>
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#F5C518' }} />
-            Plateforme SaaS de gestion immobilière moderne
-          </div>
-
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-tight tracking-tight mb-5">
-            Gérez et développez votre agence<br />
-            <span style={{ color: '#F5C518' }}>en toute simplicité</span>
-          </h1>
-          <p className="text-base md:text-lg text-blue-100 max-w-2xl mx-auto mb-8 leading-relaxed">
-            Biens, clients, visites, transactions et équipe réunis dans un seul espace
-            cloud ultra-sécurisé pensé pour les agences immobilières.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5">
-            <button
-              onClick={() => setModalMode('register')}
-              className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-sm font-bold shadow-xl transition-all hover:scale-[1.03] active:scale-[0.98]"
-              style={{ background: '#F5C518', color: '#0D3B6E' }}
-            >
-              <Sparkles size={16} /> Démarrer 14 jours gratuits <ArrowRight size={16} />
-            </button>
-            <button
-              onClick={() => setModalMode('login')}
-              className="flex items-center gap-2 px-6 py-3.5 rounded-2xl text-sm font-semibold border border-white/25 text-white hover:bg-white/10 transition-all"
-            >
-              Accéder à mon agence
-            </button>
-          </div>
-          <div className="mt-4 text-xs text-blue-200">
-            ✓ Aucune carte de crédit requise • ✓ Configuration immédiate en 30 secondes
-          </div>
-        </div>
-      </section>
-
-      {/* ── Stats bar ────────────────────────────────────────────────────── */}
-      <section className="border-b border-gray-100" style={{ background: '#F8FAFC' }}>
-        <div className="max-w-7xl mx-auto px-5 py-8 grid grid-cols-2 md:grid-cols-4 gap-6">
-          {STATS.map((s) => (
-            <div key={s.label} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#DBEAFE' }}>
-                <s.icon size={18} style={{ color: '#185FA5' }} />
-              </div>
-              <div>
-                <div className="text-lg font-black text-gray-900">{s.value}</div>
-                <div className="text-xs text-gray-500">{s.label}</div>
-              </div>
+          {/* Body */}
+          <div className="panel-body">
+            <div className="panel-eyebrow">
+              <span className="panel-eyebrow-dot" />
+              Agences Immobilières
             </div>
-          ))}
-        </div>
-      </section>
 
-      {/* ── Features ─────────────────────────────────────────────────────── */}
-      <section id="features" className="max-w-7xl mx-auto px-5 py-20">
-        <div className="text-center mb-12">
-          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#185FA5' }}>Fonctionnalités Clés</span>
-          <h2 className="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-3">Tout ce dont votre agence a besoin</h2>
-          <p className="text-gray-500 max-w-xl mx-auto text-sm leading-relaxed">
-            Une solution tout-en-un développée pour éliminer les fichiers Excel dispersés et les relances manuelles.
-          </p>
-        </div>
+            <h1 className="panel-headline">
+              Votre agence,<br />
+              <span>pilotée avec précision</span>
+            </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {FEATURES.map((f) => (
-            <div
-              key={f.title}
-              className="group p-6 rounded-2xl border border-gray-100 bg-white hover:border-gray-200 hover:shadow-lg transition-all duration-300"
-            >
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110" style={{ background: f.bg }}>
-                <f.icon size={20} style={{ color: f.color }} />
-              </div>
-              <h3 className="text-sm font-bold text-gray-900 mb-2">{f.title}</h3>
-              <p className="text-xs text-gray-500 leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Pricing (SaaS Plans) ─────────────────────────────────────────── */}
-      <section id="pricing" className="py-20 border-t border-gray-100" style={{ background: '#F8FAFC' }}>
-        <div className="max-w-7xl mx-auto px-5">
-          <div className="text-center mb-14">
-            <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Tarifs Transparents</span>
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-3">Des formules adaptées à votre agence</h2>
-            <p className="text-gray-500 max-w-xl mx-auto text-sm leading-relaxed">
-              Commencez avec 14 jours gratuits sur le forfait Pro. Passez au niveau supérieur quand votre équipe grandit.
+            <p className="panel-sub">
+              Gérez vos biens, votre équipe, vos clients et vos transactions
+              depuis un espace cloud sécurisé, conçu pour les professionnels de l'immobilier.
             </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-7 max-w-5xl mx-auto items-stretch">
-            {PLANS.map((plan) => (
-              <div
-                key={plan.name}
-                className={`relative rounded-3xl p-7 flex flex-col justify-between transition-all duration-300 ${
-                  plan.highlight
-                    ? 'bg-white border-2 border-blue-600 shadow-2xl scale-105 z-10'
-                    : 'bg-white border border-gray-200 shadow-sm hover:shadow-md'
-                }`}
-              >
-                {plan.badge && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-black text-white shadow-sm" style={{ background: '#185FA5' }}>
-                    {plan.badge}
-                  </div>
-                )}
-
-                <div>
-                  <div className="text-lg font-black text-gray-900">{plan.name}</div>
-                  <p className="text-xs text-gray-500 mt-1 mb-5">{plan.desc}</p>
-
-                  <div className="flex items-baseline gap-1 mb-6 pb-6 border-b border-gray-100">
-                    <span className="text-4xl font-black text-gray-900">{plan.price}</span>
-                    <span className="text-sm font-semibold text-gray-500">{plan.period}</span>
-                  </div>
-
-                  <div className="space-y-3 mb-8">
-                    {plan.features.map((feat) => (
-                      <div key={feat} className="flex items-start gap-2.5 text-xs text-gray-700">
-                        <Check size={14} className="text-emerald-600 mt-0.5 flex-shrink-0" />
-                        <span>{feat}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setModalMode('register')}
-                  className={`w-full py-3 rounded-xl text-xs font-bold transition-all shadow-sm ${
-                    plan.highlight
-                      ? 'text-white hover:opacity-95'
-                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                  }`}
-                  style={plan.highlight ? { background: 'linear-gradient(135deg, #185FA5 0%, #1E7FC4 100%)' } : {}}
-                >
-                  {plan.cta}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Roles ────────────────────────────────────────────────────────── */}
-      <section id="roles" className="max-w-7xl mx-auto px-5 py-20">
-        <div className="text-center mb-12">
-          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#185FA5' }}>Espaces Personnalisés</span>
-          <h2 className="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-3">Une interface sur-mesure par collaborateur</h2>
-          <p className="text-gray-500 max-w-xl mx-auto text-sm leading-relaxed">
-            Chaque membre de votre agence accède aux outils indispensables à ses missions.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {ROLES.map((r) => (
-            <div
-              key={r.role}
-              className="p-5 rounded-2xl bg-white border border-gray-100 hover:shadow-md transition-all group"
-            >
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center mb-3 text-xs font-black text-white"
-                style={{ background: r.color }}
-              >
-                {r.role[0]}
-              </div>
-              <div className="text-sm font-bold text-gray-900 mb-1.5">{r.role}</div>
-              <p className="text-xs text-gray-500 leading-relaxed">{r.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── About / Why ──────────────────────────────────────────────────── */}
-      <section id="about" className="border-t border-gray-100 py-20" style={{ background: '#F8FAFC' }}>
-        <div className="max-w-7xl mx-auto px-5 grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#185FA5' }}>Pourquoi ImmoGest Pro</span>
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mt-2 mb-5">Conçu pour l'excellence immobilière</h2>
-            <div className="space-y-4">
+            <div className="feature-list">
               {[
-                'Architecture SaaS multi-tenants : isolation complète de vos données',
-                'Devises en Dinars Tunisiens (DT) et formats adaptés',
-                'Comptes rendus de visites terrain avec photos et géolocalisation',
-                'Pipeline de vente Kanban avec étapes négociables',
-                'Statistiques de performance et CA en temps réel',
-                'Accessible instantanément sur smartphone, tablette et PC',
-              ].map((item) => (
-                <div key={item} className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: '#DCFCE7' }}>
-                    <CheckCircle size={12} style={{ color: '#16A34A' }} />
+                'Catalogue de biens avec publication instantanée',
+                'CRM clients — prospects, pipeline, relances',
+                'Agenda & planification des visites terrain',
+                'Rapports de performance en temps réel',
+                'Gestion documentaire & transactions Kanban',
+              ].map((f) => (
+                <div key={f} className="feature-item">
+                  <div className="feature-check">
+                    <Check size={11} color="#F5C518" strokeWidth={3} />
                   </div>
-                  <p className="text-sm text-gray-700">{item}</p>
+                  <span className="feature-text">{f}</span>
                 </div>
               ))}
             </div>
+
+            <div className="stats-grid">
+              <StatCard icon={Building2} value="Multi-tenant" label="Données isolées" delay={0} />
+              <StatCard icon={Shield} value="100% Sécurisé" label="Chiffrement JWT" delay={80} />
+              <StatCard icon={TrendingUp} value="Temps réel" label="Tableau de bord live" delay={160} />
+              <StatCard icon={Users} value="Multi-rôles" label="Admin · Agent · Client" delay={240} />
+            </div>
           </div>
 
-          <div className="relative">
-            <div className="rounded-2xl overflow-hidden shadow-2xl border border-gray-100" style={{ background: 'linear-gradient(135deg, #0D3B6E 0%, #185FA5 100%)' }}>
-              <div className="p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-                  <div className="ml-3 px-3 py-0.5 rounded text-white/40 text-xs border border-white/10" style={{ background: 'rgba(255,255,255,0.07)' }}>
-                    votre-agence.immogest.pro
-                  </div>
+          {/* Footer */}
+          <div className="panel-footer">
+            <p className="panel-footer-text">© {new Date().getFullYear()} ImmoGest Pro — Solution SaaS immobilière</p>
+          </div>
+        </div>
+
+        {/* ── RIGHT PANEL (form) ───────────────────────────────────────── */}
+        <div className="panel-right">
+          <div className="form-card">
+
+            {/* Mobile logo (only on small screens) */}
+            <div className="mobile-logo">
+              <div className="mobile-logo-mark">IG</div>
+              <div className="mobile-logo-name">ImmoGest Pro</div>
+            </div>
+
+            {/* Tabs */}
+            <div className="tabs-wrap">
+              <div className="tabs" role="tablist">
+                <button
+                  role="tab"
+                  className={`tab ${mode === 'login' ? 'active' : ''}`}
+                  onClick={() => switchMode('login')}
+                  aria-selected={mode === 'login'}
+                >
+                  <Lock size={13} />
+                  Se connecter
+                </button>
+                <button
+                  role="tab"
+                  className={`tab ${mode === 'register' ? 'active' : ''}`}
+                  onClick={() => switchMode('register')}
+                  aria-selected={mode === 'register'}
+                >
+                  <Sparkles size={13} />
+                  Créer mon agence
+                </button>
+              </div>
+            </div>
+
+            {/* Form body */}
+            <div className="form-body">
+              {/* Error */}
+              {error && (
+                <div className="alert alert-error" role="alert">
+                  <span>⚠</span> {error}
                 </div>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-2">
-                    {[['32', 'Biens actifs'], ['148', 'Clients'], ['24', 'Visites']].map(([v, l]) => (
-                      <div key={l} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.1)' }}>
-                        <div className="text-xl font-black text-white">{v}</div>
-                        <div className="text-xs text-blue-200">{l}</div>
+              )}
+              {success && (
+                <div className="alert alert-success" role="alert">
+                  <span>✓</span> {success}
+                </div>
+              )}
+
+              {/* ── LOGIN FORM ── */}
+              {mode === 'login' && (
+                <>
+                  <div className="form-title">Bon retour 👋</div>
+                  <div className="form-subtitle">Accédez à votre espace de gestion immobilière</div>
+
+                  <form onSubmit={handleLogin} autoComplete="off" noValidate>
+                    <div className="field">
+                      <label className="field-label" htmlFor="login-email">Adresse email</label>
+                      <div className="field-input-wrap">
+                        <Mail size={14} className="field-icon" />
+                        <input
+                          id="login-email"
+                          type="email"
+                          className="field-input"
+                          placeholder="admin@votre-agence.com"
+                          value={loginEmail}
+                          onChange={(e) => setLoginEmail(e.target.value)}
+                          required
+                          autoComplete="off"
+                        />
                       </div>
-                    ))}
-                  </div>
-                  {['Villa Carthage — 450 000 DT', 'Appart. La Marsa — 280 000 DT', 'Bureau Lac II — 1 500 DT/mois'].map((item) => (
-                    <div key={item} className="flex items-center gap-2.5 rounded-xl p-2.5" style={{ background: 'rgba(255,255,255,0.07)' }}>
-                      <div className="w-7 h-7 rounded-lg flex-shrink-0" style={{ background: '#F5C518' }} />
-                      <span className="text-xs text-white/80 truncate">{item}</span>
-                      <Star size={11} className="ml-auto flex-shrink-0 text-yellow-400" />
                     </div>
-                  ))}
-                </div>
-              </div>
+
+                    <div className="field">
+                      <label className="field-label" htmlFor="login-password">Mot de passe / Code d'accès</label>
+                      <div className="field-input-wrap">
+                        <Lock size={14} className="field-icon" />
+                        <input
+                          id="login-password"
+                          type={showLoginPass ? 'text' : 'password'}
+                          className="field-input"
+                          placeholder="••••••••"
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          required
+                          autoComplete="new-password"
+                          style={{ paddingRight: '38px' }}
+                        />
+                        <button
+                          type="button"
+                          className="toggle-pass"
+                          onClick={() => setShowLoginPass(!showLoginPass)}
+                          aria-label={showLoginPass ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                        >
+                          {showLoginPass ? <EyeOff size={15} /> : <Eye size={15} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      id="btn-login-submit"
+                      type="submit"
+                      className="btn-submit"
+                      disabled={loading || !loginValid}
+                    >
+                      {loading ? (
+                        <><span className="spinner" /> Connexion…</>
+                      ) : (
+                        <>Accéder à mon espace <ArrowRight size={15} /></>
+                      )}
+                    </button>
+                  </form>
+
+                  <div className="switch-link">
+                    Pas encore d'agence ?
+                    <button type="button" onClick={() => switchMode('register')}>
+                      Créer un compte (14j gratuits)
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* ── REGISTER FORM ── */}
+              {mode === 'register' && (
+                <>
+                  <div className="form-title">Créer votre agence</div>
+                  <div className="form-subtitle">Démarrez votre essai gratuit — aucune carte requise</div>
+
+                  <div className="trial-badge">
+                    <div className="trial-badge-icon">
+                      <Sparkles size={14} />
+                    </div>
+                    <div className="trial-badge-text">
+                      <strong>Essai gratuit 14 jours</strong> — accès complet, sans engagement
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleRegister} autoComplete="off" noValidate>
+                    <div className="field">
+                      <label className="field-label" htmlFor="reg-agency">Nom de votre agence *</label>
+                      <div className="field-input-wrap">
+                        <Home size={14} className="field-icon" />
+                        <input
+                          id="reg-agency"
+                          type="text"
+                          className="field-input"
+                          placeholder="Ex: Carthage Prestige Immobilier"
+                          value={agencyName}
+                          onChange={(e) => setAgencyName(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="field-grid">
+                      <div className="field">
+                        <label className="field-label" htmlFor="reg-name">Votre nom *</label>
+                        <div className="field-input-wrap">
+                          <User size={14} className="field-icon" />
+                          <input
+                            id="reg-name"
+                            type="text"
+                            className="field-input"
+                            placeholder="Prénom Nom"
+                            value={adminName}
+                            onChange={(e) => setAdminName(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="field">
+                        <label className="field-label" htmlFor="reg-phone">Téléphone</label>
+                        <div className="field-input-wrap">
+                          <Phone size={14} className="field-icon" />
+                          <input
+                            id="reg-phone"
+                            type="tel"
+                            className="field-input"
+                            placeholder="+216 71 000 000"
+                            value={registerPhone}
+                            onChange={(e) => setRegisterPhone(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="field">
+                      <label className="field-label" htmlFor="reg-email">Email professionnel *</label>
+                      <div className="field-input-wrap">
+                        <Mail size={14} className="field-icon" />
+                        <input
+                          id="reg-email"
+                          type="email"
+                          className="field-input"
+                          placeholder="contact@votre-agence.com"
+                          value={registerEmail}
+                          onChange={(e) => setRegisterEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="field">
+                      <label className="field-label" htmlFor="reg-password">Mot de passe administrateur *</label>
+                      <div className="field-input-wrap">
+                        <Lock size={14} className="field-icon" />
+                        <input
+                          id="reg-password"
+                          type={showRegPass ? 'text' : 'password'}
+                          className="field-input"
+                          placeholder="Au moins 6 caractères"
+                          value={registerPassword}
+                          onChange={(e) => setRegisterPassword(e.target.value)}
+                          minLength={6}
+                          required
+                          style={{ paddingRight: '38px' }}
+                        />
+                        <button
+                          type="button"
+                          className="toggle-pass"
+                          onClick={() => setShowRegPass(!showRegPass)}
+                          aria-label={showRegPass ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                        >
+                          {showRegPass ? <EyeOff size={15} /> : <Eye size={15} />}
+                        </button>
+                      </div>
+                      {/* Password strength indicator */}
+                      {registerPassword.length > 0 && (
+                        <div className="pw-strength" aria-hidden="true">
+                          {[0, 1, 2, 3].map((i) => {
+                            const strength = registerPassword.length < 6 ? 1 : registerPassword.length < 10 ? 2 : 3;
+                            const cls = i < strength ? (strength === 1 ? 'weak' : strength === 2 ? 'medium' : 'strong') : '';
+                            return <div key={i} className={`pw-bar ${cls}`} />;
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      id="btn-register-submit"
+                      type="submit"
+                      className="btn-submit"
+                      disabled={loading || !registerValid}
+                      style={{ background: 'linear-gradient(135deg, #185FA5 0%, #1E7FC4 100%)' }}
+                    >
+                      {loading ? (
+                        <><span className="spinner" /> Création de votre agence…</>
+                      ) : (
+                        <>Démarrer mon agence <ArrowRight size={15} /></>
+                      )}
+                    </button>
+                  </form>
+
+                  <div className="switch-link">
+                    Déjà un compte ?
+                    <button type="button" onClick={() => switchMode('login')}>
+                      Se connecter
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
-            <div className="absolute -bottom-4 -right-4 bg-white rounded-2xl shadow-xl p-3 flex items-center gap-2.5 border border-gray-100">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: '#DCFCE7' }}>
-                <Zap size={16} style={{ color: '#16A34A' }} />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-gray-900">Données en direct</div>
-                <div className="text-[11px] text-gray-400">Multi-agences SaaS</div>
-              </div>
+
+            {/* Security strip */}
+            <div className="security-strip">
+              <Shield size={12} />
+              <span>Connexion chiffrée · Données isolées par agence · Hébergé en sécurité</span>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* ── CTA Banner ───────────────────────────────────────────────────── */}
-      <section style={{ background: 'linear-gradient(135deg, #0D3B6E 0%, #185FA5 100%)' }}>
-        <div className="max-w-7xl mx-auto px-5 py-16 text-center">
-          <h2 className="text-2xl md:text-3xl font-black text-white mb-3">
-            Prêt à propulser votre agence immobilière ?
-          </h2>
-          <p className="text-blue-200 text-sm mb-7 max-w-xl mx-auto">
-            Rejoignez les agences qui automatisent leur gestion avec ImmoGest Pro.
-          </p>
-          <button
-            onClick={() => setModalMode('register')}
-            className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-2xl text-sm font-black shadow-xl transition-all hover:scale-[1.03] active:scale-[0.98]"
-            style={{ background: '#F5C518', color: '#0D3B6E' }}
-          >
-            <Sparkles size={16} /> Créer mon agence gratuitement <ArrowRight size={16} />
-          </button>
-        </div>
-      </section>
-
-      {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <footer className="border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-5 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-400">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: '#185FA5' }}>
-              <span className="text-white text-[8px] font-bold">IG</span>
-            </div>
-            <span className="font-semibold text-gray-600">ImmoGest Pro SaaS</span>
-          </div>
-          <span>© {new Date().getFullYear()} — Solution SaaS de gestion immobilière</span>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setModalMode('register')}
-              className="font-semibold text-blue-600 hover:underline"
-            >
-              Essai gratuit
-            </button>
-            <button
-              onClick={() => setModalMode('login')}
-              className="hover:text-gray-900 transition-colors"
-            >
-              Connexion →
-            </button>
-          </div>
-        </div>
-      </footer>
-
-      {/* ── Auth Modal ───────────────────────────────────────────────────── */}
-      {modalMode && (
-        <AuthModal
-          initialMode={modalMode}
-          onClose={() => setModalMode(null)}
-        />
-      )}
-    </div>
+      </div>
+    </>
   );
 };
