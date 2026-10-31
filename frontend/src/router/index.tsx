@@ -113,20 +113,6 @@ const RequireAuth: React.FC<{ allowedRoles?: string[] }> = ({ allowedRoles }) =>
   return <Outlet />;
 };
 
-// Root redirect — authenticated users go to their dashboard, others see the public site.
-const RootRedirect: React.FC = () => {
-  const { isAuthenticated, user } = useAuthStore();
-  if (isAuthenticated && user) {
-    if (user.role === 'superadmin') return <Navigate to="/superadmin" replace />;
-    return <Navigate to={dashboardPathByRole[user.role]} replace />;
-  }
-  return (
-    <LangProvider>
-      <PublicHome />
-    </LangProvider>
-  );
-};
-
 export const router = createBrowserRouter([
   {
     path: '/login',
@@ -136,7 +122,11 @@ export const router = createBrowserRouter([
   // ── Public real estate site (no auth) ──
   {
     path: '/',
-    element: <RootRedirect />,
+    element: (
+      <LangProvider>
+        <PublicHome />
+      </LangProvider>
+    ),
   },
   {
     path: '/proprietes',

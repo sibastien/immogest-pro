@@ -2,8 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLang } from './LangContext';
 import type { Lang } from './i18n';
-import { Menu, X, Globe, ChevronDown, Check } from 'lucide-react';
+import { Menu, X, Globe, ChevronDown, Check, LayoutDashboard } from 'lucide-react';
 import { PartnerModal } from './PartnerModal';
+import { useAuthStore, dashboardPathByRole } from '../store/authStore';
 
 interface CountryOption {
   code: string;
@@ -25,6 +26,7 @@ const countries: CountryOption[] = [
 
 export const PublicNavbar: React.FC = () => {
   const { t, lang, setLang } = useLang();
+  const { isAuthenticated, user } = useAuthStore();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
@@ -165,13 +167,23 @@ export const PublicNavbar: React.FC = () => {
                 {t('header_partner')}
               </button>
 
-              {/* Button: Accès partenaire */}
-              <button
-                onClick={() => navigate('/login')}
-                className="px-4 py-2 rounded-full border border-white/20 hover:border-[#F5C518]/60 bg-black/20 hover:bg-black/40 text-white/90 hover:text-white text-xs font-medium tracking-wide transition-all duration-200"
-              >
-                {t('header_partner_access')}
-              </button>
+              {/* Button: Accès partenaire ou Mon CRM */}
+              {isAuthenticated && user ? (
+                <button
+                  onClick={() => navigate(user.role === 'superadmin' ? '/superadmin' : (dashboardPathByRole[user.role] || '/admin'))}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#F5C518]/60 bg-[#F5C518]/15 hover:bg-[#F5C518]/25 text-[#F5C518] text-xs font-semibold tracking-wide transition-all duration-200 shadow-sm"
+                >
+                  <LayoutDashboard size={14} />
+                  <span>Mon CRM</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-4 py-2 rounded-full border border-white/20 hover:border-[#F5C518]/60 bg-black/20 hover:bg-black/40 text-white/90 hover:text-white text-xs font-medium tracking-wide transition-all duration-200"
+                >
+                  {t('header_partner_access')}
+                </button>
+              )}
 
               {/* WhatsApp Icon Button */}
               <a
@@ -263,15 +275,28 @@ export const PublicNavbar: React.FC = () => {
             >
               ✨ {t('header_partner')}
             </button>
-            <button
-              onClick={() => {
-                navigate('/login');
-                setMobileOpen(false);
-              }}
-              className="w-full text-left px-4 py-2.5 rounded-xl bg-[#F5C518] text-[#0D1B3E] font-bold text-sm"
-            >
-              🔐 {t('header_partner_access')}
-            </button>
+            {isAuthenticated && user ? (
+              <button
+                onClick={() => {
+                  navigate(user.role === 'superadmin' ? '/superadmin' : (dashboardPathByRole[user.role] || '/admin'));
+                  setMobileOpen(false);
+                }}
+                className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#F5C518] text-[#0D1B3E] font-bold text-sm"
+              >
+                <LayoutDashboard size={16} />
+                <span>Mon Espace CRM</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  navigate('/login');
+                  setMobileOpen(false);
+                }}
+                className="w-full text-left px-4 py-2.5 rounded-xl bg-[#F5C518] text-[#0D1B3E] font-bold text-sm"
+              >
+                🔐 {t('header_partner_access')}
+              </button>
+            )}
 
             <div className="pt-2 flex items-center justify-between border-t border-white/10">
               <span className="text-xs text-white/60">Langue:</span>
