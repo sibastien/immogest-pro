@@ -35,3 +35,4 @@ uploads/
 *.db-shm
 # Analysis artifacts
 graphify-out/
+.agents/

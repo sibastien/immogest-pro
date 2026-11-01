@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   UserPlus, Trash2, RefreshCw, Copy, Check, KeyRound,
-  ShieldCheck, Building2, CreditCard, Sparkles, AlertCircle, Save
+  ShieldCheck, Building2, CreditCard, Sparkles, AlertCircle, Save,
+  Phone, MessageCircle, MapPin
 } from 'lucide-react';
 import { useAgentsStore } from '../../store/agentsStore';
 import { useAuthStore } from '../../store/authStore';
@@ -71,6 +72,9 @@ export const AdminSettings: React.FC = () => {
   // Tenant / Subscription state
   const [tenantData, setTenantData] = useState<Tenant | null>(authTenant);
   const [agencyNameInput, setAgencyNameInput] = useState(authTenant?.name || '');
+  const [agencyPhoneInput, setAgencyPhoneInput] = useState(authTenant?.phone || '');
+  const [agencyWhatsAppInput, setAgencyWhatsAppInput] = useState(authTenant?.whatsapp || '');
+  const [agencyAddressInput, setAgencyAddressInput] = useState(authTenant?.address || '');
   const [savingTenant, setSavingTenant] = useState(false);
   const [tenantMsg, setTenantMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -79,7 +83,10 @@ export const AdminSettings: React.FC = () => {
     api.get<Tenant>('/tenant')
       .then((data) => {
         setTenantData(data);
-        setAgencyNameInput(data.name);
+        setAgencyNameInput(data.name || '');
+        setAgencyPhoneInput(data.phone || '');
+        setAgencyWhatsAppInput(data.whatsapp || '');
+        setAgencyAddressInput(data.address || '');
         setTenant(data);
       })
       .catch(() => {});
@@ -135,16 +142,21 @@ export const AdminSettings: React.FC = () => {
     setTimeout(() => setCopiedId((id) => (id === agent.id ? null : id)), 1500);
   };
 
-  const handleSaveAgencyName = async (e: React.FormEvent) => {
+  const handleSaveAgencyDetails = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agencyNameInput.trim()) return;
     setSavingTenant(true);
     setTenantMsg(null);
     try {
-      const updated = await api.put<Tenant>('/tenant', { name: agencyNameInput.trim() });
-      setTenantData((prev) => prev ? { ...prev, name: updated.name } : updated);
+      const updated = await api.put<Tenant>('/tenant', {
+        name: agencyNameInput.trim(),
+        phone: agencyPhoneInput.trim(),
+        whatsapp: agencyWhatsAppInput.trim(),
+        address: agencyAddressInput.trim(),
+      });
+      setTenantData((prev) => prev ? { ...prev, ...updated } : updated);
       setTenant(updated);
-      setTenantMsg({ type: 'success', text: 'Nom de l’agence mis à jour avec succès !' });
+      setTenantMsg({ type: 'success', text: 'Coordonnées de l’agence mises à jour avec succès !' });
     } catch {
       setTenantMsg({ type: 'error', text: 'Erreur lors de la mise à jour.' });
     } finally {
@@ -366,29 +378,77 @@ export const AdminSettings: React.FC = () => {
                 <Building2 size={20} className="text-blue-600" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-gray-900">Identité de l'Agence</h3>
-                <p className="text-xs text-gray-500">Informations de votre instance SaaS isolée</p>
+                <h3 className="text-base font-bold text-gray-900">Identité & Coordonnées Publiques</h3>
+                <p className="text-xs text-gray-500">Ces coordonnées apparaissent sur vos biens publiés pour permettre aux clients de vous contacter directement.</p>
               </div>
             </div>
 
-            <form onSubmit={handleSaveAgencyName} className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Nom de l'agence</label>
-                <input
-                  type="text"
-                  value={agencyNameInput}
-                  onChange={(e) => setAgencyNameInput(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+            <form onSubmit={handleSaveAgencyDetails} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Nom de l'agence *</label>
+                  <input
+                    type="text"
+                    required
+                    value={agencyNameInput}
+                    onChange={(e) => setAgencyNameInput(e.target.value)}
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                    <Phone size={13} className="text-blue-600" />
+                    Téléphone de contact client
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="+216 71 123 456"
+                    value={agencyPhoneInput}
+                    onChange={(e) => setAgencyPhoneInput(e.target.value)}
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
-              <button
-                type="submit"
-                disabled={savingTenant}
-                className="py-2.5 px-4 rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center gap-2"
-                style={{ background: '#185FA5' }}
-              >
-                <Save size={16} /> {savingTenant ? 'Enregistrement…' : 'Mettre à jour'}
-              </button>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                    <MessageCircle size={13} className="text-green-600" />
+                    Numéro WhatsApp direct
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="+216 20 123 456"
+                    value={agencyWhatsAppInput}
+                    onChange={(e) => setAgencyWhatsAppInput(e.target.value)}
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                    <MapPin size={13} className="text-gray-500" />
+                    Adresse de l'agence
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Les Berges du Lac 2, Tunis"
+                    value={agencyAddressInput}
+                    onChange={(e) => setAgencyAddressInput(e.target.value)}
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  disabled={savingTenant}
+                  className="py-2.5 px-6 rounded-xl text-sm font-bold text-white transition-all flex items-center justify-center gap-2 shadow-sm"
+                  style={{ background: '#185FA5' }}
+                >
+                  <Save size={16} /> {savingTenant ? 'Enregistrement…' : 'Enregistrer les coordonnées'}
+                </button>
+              </div>
             </form>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100 text-xs">

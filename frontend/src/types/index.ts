@@ -4,8 +4,21 @@ export type PropertyType = 'villa' | 'appartement' | 'maison' | 'commercial' | '
 export type TransactionType = 'vente' | 'location';
 export type PropertyStatus = 'disponible' | 'sous_compromis' | 'loue' | 'vendu';
 
+export interface AgencyContact {
+  id?: string;
+  name: string;
+  slug?: string;
+  phone?: string;
+  whatsapp?: string;
+  email?: string;
+  address?: string;
+  logo?: string;
+  agentName?: string;
+}
+
 export interface Property {
   id: string;
+  tenantId?: string;
   ref: string;
   title: string;
   transaction: TransactionType;
@@ -28,6 +41,7 @@ export interface Property {
   parking?: boolean;
   furnished?: boolean;
   published: boolean;
+  agency?: AgencyContact;
 }
 
 export interface Client {
@@ -145,6 +159,10 @@ export interface Tenant {
   planStatus: 'active' | 'past_due' | 'canceled';
   trialEndsAt?: string | null;
   ownerEmail: string;
+  phone?: string;
+  whatsapp?: string;
+  address?: string;
+  logo?: string;
   createdAt: string;
   usage?: {
     properties: number;

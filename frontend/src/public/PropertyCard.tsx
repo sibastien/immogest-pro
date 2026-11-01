@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import type { Property } from '../types';
 import { useLang } from './LangContext';
-import { Bed, Bath, Square, Car, MapPin, ArrowRight, Tag } from 'lucide-react';
+import { Bed, Bath, Square, Car, MapPin, ArrowRight, Tag, Phone, MessageCircle, Building2 } from 'lucide-react';
 
 interface PropertyCardProps {
   property: Property;
@@ -17,6 +17,13 @@ function formatPrice(price: number, priceType: string, cardMois: string): string
   return priceType === 'mois' ? `${formatted} DT${cardMois}` : `${formatted} DT`;
 }
 
+function cleanWhatsAppNumber(phone?: string): string {
+  if (!phone) return '';
+  const digits = phone.replace(/[^0-9]/g, '');
+  if (digits.length === 8) return `216${digits}`;
+  return digits;
+}
+
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured }) => {
   const { t } = useLang();
 
@@ -29,6 +36,13 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured }
   };
 
   const mainPhoto = property.photos?.[0];
+  const agency = property.agency;
+  const agencyPhone = agency?.phone || '';
+  const agencyWhatsApp = cleanWhatsAppNumber(agency?.whatsapp || agency?.phone);
+
+  const waMessage = encodeURIComponent(
+    `Bonjour, je suis intéressé par votre bien "${property.title}" (Réf: ${property.ref || property.id}). Est-il toujours disponible ?`
+  );
 
   return (
     <Link
@@ -119,7 +133,54 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured }
           )}
         </div>
 
-        <div className="flex items-center justify-between">
+        {/* Agency Info & Direct Contact */}
+        {agency && (
+          <div className="mb-4 pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-[#1E7FC4] font-bold text-xs flex-shrink-0">
+                <Building2 size={14} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-gray-900 truncate">
+                  {agency.name}
+                </div>
+                {agencyPhone && (
+                  <div className="text-[11px] text-gray-500 font-mono truncate">
+                    {agencyPhone}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Direct contact action buttons on card */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {agencyPhone && (
+                <a
+                  href={`tel:${agencyPhone.replace(/\s+/g, '')}`}
+                  onClick={(e) => e.stopPropagation()}
+                  title={`Appeler ${agency.name}`}
+                  className="w-8 h-8 rounded-lg bg-blue-50 text-[#1E7FC4] hover:bg-[#1E7FC4] hover:text-white transition-colors flex items-center justify-center shadow-xs"
+                >
+                  <Phone size={13} />
+                </a>
+              )}
+              {agencyWhatsApp && (
+                <a
+                  href={`https://wa.me/${agencyWhatsApp}?text=${waMessage}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  title={`Discuter sur WhatsApp avec ${agency.name}`}
+                  className="w-8 h-8 rounded-lg bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition-colors flex items-center justify-center shadow-xs"
+                >
+                  <MessageCircle size={13} />
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between pt-1">
           <span className="text-xs text-gray-400 font-mono">Réf. {property.ref}</span>
           <span className="flex items-center gap-1.5 text-[#1E7FC4] text-sm font-semibold group-hover:gap-2.5 transition-all">
             {t('card_details')}

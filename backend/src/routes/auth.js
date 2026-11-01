@@ -25,6 +25,10 @@ function tenantToJSON(row) {
     planStatus: row.plan_status || 'active',
     trialEndsAt: row.trial_ends_at || null,
     ownerEmail: row.owner_email,
+    phone: row.phone || '',
+    whatsapp: row.whatsapp || row.phone || '',
+    address: row.address || '',
+    logo: row.logo || '',
     createdAt: row.created_at,
   };
 }
@@ -96,14 +100,16 @@ router.post('/register', (req, res) => {
 
   // Create tenant
   db.prepare(`
-    INSERT INTO tenants (id, name, slug, plan, plan_status, trial_ends_at, owner_email, created_at)
-    VALUES (@id, @name, @slug, 'trial', 'active', @trial_ends_at, @owner_email, @created_at)
+    INSERT INTO tenants (id, name, slug, plan, plan_status, trial_ends_at, owner_email, phone, whatsapp, created_at)
+    VALUES (@id, @name, @slug, 'trial', 'active', @trial_ends_at, @owner_email, @phone, @whatsapp, @created_at)
   `).run({
     id: tenantId,
     name: agencyName.trim(),
     slug,
     trial_ends_at: trialEnd,
     owner_email: cleanEmail,
+    phone: (phone || '').trim(),
+    whatsapp: (phone || '').trim(),
     created_at: now,
   });
 

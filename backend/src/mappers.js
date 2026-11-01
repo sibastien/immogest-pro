@@ -101,8 +101,12 @@ function crToJSON(row) {
 }
 
 function propertyToJSON(row) {
+  const agencyPhone = row.agency_phone || row.agent_phone || '';
+  const agencyWhatsapp = row.agency_whatsapp || agencyPhone;
+
   return {
     id: row.id,
+    tenantId: row.tenant_id,
     ref: row.ref,
     title: row.title,
     transaction: row.deal_type,
@@ -125,6 +129,17 @@ function propertyToJSON(row) {
     parking: row.parking == null ? undefined : !!row.parking,
     furnished: row.furnished == null ? undefined : !!row.furnished,
     published: !!row.published,
+    agency: (row.agency_name || row.tenant_name) ? {
+      id: row.tenant_id,
+      name: row.agency_name || row.tenant_name,
+      slug: row.agency_slug || row.tenant_slug,
+      phone: agencyPhone,
+      whatsapp: agencyWhatsapp,
+      email: row.agency_email || row.tenant_email || undefined,
+      logo: row.agency_logo || undefined,
+      address: row.agency_address || undefined,
+      agentName: row.agent_name || undefined,
+    } : undefined,
   };
 }
 

@@ -9,12 +9,19 @@ import type { Property } from '../types';
 import {
   ArrowLeft, MapPin, Square, Bed, Bath, Car, Star,
   Building2, ChevronLeft, ChevronRight, Check,
-  Phone, Calendar, Tag,
+  Phone, Calendar, Tag, MessageCircle, Mail, ShieldCheck,
 } from 'lucide-react';
 
 function formatPrice(price: number, priceType: string): string {
   const formatted = new Intl.NumberFormat('fr-TN', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(price);
   return priceType === 'mois' ? `${formatted} DT/mois` : `${formatted} DT`;
+}
+
+function cleanWhatsAppNumber(phone?: string): string {
+  if (!phone) return '';
+  const digits = phone.replace(/[^0-9]/g, '');
+  if (digits.length === 8) return `216${digits}`;
+  return digits;
 }
 
 export const PublicPropertyDetail: React.FC = () => {
@@ -91,6 +98,15 @@ export const PublicPropertyDetail: React.FC = () => {
     commercial: t('type_commercial'),
     terrain: t('type_terrain'),
   };
+
+  const agency = property.agency;
+  const agencyPhone = agency?.phone || '';
+  const agencyWhatsApp = cleanWhatsAppNumber(agency?.whatsapp || agency?.phone);
+  const agencyEmail = agency?.email || '';
+
+  const waMessage = encodeURIComponent(
+    `Bonjour, je suis intéressé par votre bien "${property.title}" (Réf: ${property.ref || property.id}) affiché à ${formatPrice(property.price, property.priceType)}. Est-il toujours disponible ?`
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -264,25 +280,82 @@ export const PublicPropertyDetail: React.FC = () => {
             )}
           </div>
 
-          {/* ── Right: sticky contact card ── */}
-          <div className="space-y-4">
+          {/* ── Right: sticky agency contact card & inquiry form ── */}
+          <div className="space-y-5">
             {/* Price card */}
             <div className="bg-gradient-to-br from-[#0D1B3E] to-[#1A3A6B] rounded-2xl p-6 text-white shadow-xl">
               <div className="text-white/50 text-xs font-medium uppercase tracking-widest mb-1">Prix</div>
               <div className="text-3xl font-extrabold text-[#F5C518] mb-1">
                 {formatPrice(property.price, property.priceType)}
               </div>
-              <div className="text-white/40 text-sm">{typeLabel[property.type]} · {property.location}</div>
-              <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-2 text-white/60 text-sm">
-                <Phone size={14} />
-                Appelez-nous pour plus d'infos
+              <div className="text-white/60 text-sm">{typeLabel[property.type]} · {property.location}</div>
+            </div>
+
+            {/* Dedicated Agency Contact Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-5">
+              {/* Agency Header */}
+              <div className="flex items-center gap-3.5 pb-4 border-b border-gray-100">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/10 to-[#1E7FC4]/20 border border-[#1E7FC4]/20 flex items-center justify-center text-[#1E7FC4] font-bold text-lg flex-shrink-0 shadow-xs">
+                  <Building2 size={24} />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-gray-900 text-base truncate">
+                      {agency?.name || 'Agence Immobilière'}
+                    </span>
+                    <span title="Agence vérifiée" className="flex items-center">
+                      <ShieldCheck size={16} className="text-blue-500 flex-shrink-0" />
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {agency?.agentName ? `Conseiller: ${agency.agentName}` : 'Agence partenaire ImmoGest'}
+                  </p>
+                  {agency?.address && (
+                    <p className="text-xs text-gray-400 truncate mt-0.5">{agency.address}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Direct Instant Action Buttons */}
+              <div className="space-y-2.5">
+                {agencyPhone && (
+                  <a
+                    href={`tel:${agencyPhone.replace(/\s+/g, '')}`}
+                    className="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-[#1E7FC4] hover:bg-[#185FA5] transition-all flex items-center justify-center gap-2 shadow-sm shadow-blue-500/20 active:scale-[0.99]"
+                  >
+                    <Phone size={16} />
+                    <span>Appeler l'agence ({agencyPhone})</span>
+                  </a>
+                )}
+
+                {agencyWhatsApp && (
+                  <a
+                    href={`https://wa.me/${agencyWhatsApp}?text=${waMessage}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-[#25D366] hover:bg-[#20BA5A] transition-all flex items-center justify-center gap-2 shadow-sm shadow-green-500/20 active:scale-[0.99]"
+                  >
+                    <MessageCircle size={17} />
+                    <span>Contacter sur WhatsApp</span>
+                  </a>
+                )}
+
+                {agencyEmail && (
+                  <a
+                    href={`mailto:${agencyEmail}?subject=${encodeURIComponent(`Demande d'information - Réf: ${property.ref || property.id}`)}`}
+                    className="w-full py-2.5 px-4 rounded-xl font-medium text-xs text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-gray-900 border border-gray-200 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Mail size={14} />
+                    <span>Envoyer un email ({agencyEmail})</span>
+                  </a>
+                )}
               </div>
             </div>
 
             {/* Inquiry form */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 lg:sticky lg:top-24">
-              <h3 className="font-bold text-gray-900 text-lg mb-1">{t('detail_contact_title')}</h3>
-              <p className="text-gray-500 text-sm mb-5">{t('detail_contact_sub')}</p>
+              <h3 className="font-bold text-gray-900 text-base mb-1">{t('detail_contact_title')}</h3>
+              <p className="text-gray-500 text-xs mb-4">{t('detail_contact_sub')}</p>
               <InquiryForm propertyId={property.id} propertyRef={property.ref} />
             </div>
           </div>

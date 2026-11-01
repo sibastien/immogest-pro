@@ -198,6 +198,12 @@ for (const table of TENANT_TABLES) {
   }
 }
 
+// ─── Migrations: tenant contact details ─────────────────────────────────────────
+ensureColumn('tenants', 'phone', "phone TEXT DEFAULT ''");
+ensureColumn('tenants', 'whatsapp', "whatsapp TEXT DEFAULT ''");
+ensureColumn('tenants', 'address', "address TEXT DEFAULT ''");
+ensureColumn('tenants', 'logo', "logo TEXT DEFAULT ''");
+
 // ─── Other legacy migrations ───────────────────────────────────────────────────
 if (ensureColumn('properties', 'deal_type', "deal_type TEXT NOT NULL DEFAULT 'vente'")) {
   db.prepare("UPDATE properties SET deal_type = 'location' WHERE price_type = 'mois'").run();
@@ -209,14 +215,16 @@ ensureColumn('properties', 'published', 'published INTEGER NOT NULL DEFAULT 0');
 
 // ─── Bootstrap: create the default tenant if it doesn't exist ─────────────────
 // This keeps existing single-agency installations working as tenant "default".
-const defaultTenant = db.prepare('SELECT id FROM tenants WHERE id = ?').get('default');
+const defaultTenant = db.prepare('SELECT id, phone, whatsapp FROM tenants WHERE id = ?').get('default');
 if (!defaultTenant) {
   const now = new Date().toISOString();
   db.prepare(`
-    INSERT INTO tenants (id, name, slug, plan, plan_status, trial_ends_at, owner_email, created_at)
-    VALUES ('default', 'ImmoGest Pro', 'default', 'pro', 'active', NULL, 'admin@immogest.pro', ?)
+    INSERT INTO tenants (id, name, slug, plan, plan_status, trial_ends_at, owner_email, created_at, phone, whatsapp)
+    VALUES ('default', 'ImmoGest Pro', 'default', 'pro', 'active', NULL, 'admin@immogest.pro', ?, '+216 71 123 456', '+216 71 123 456')
   `).run(now);
   console.log('[bootstrap] Created default tenant');
+} else if (!defaultTenant.phone) {
+  db.prepare("UPDATE tenants SET phone = '+216 71 123 456', whatsapp = '+216 71 123 456' WHERE id = 'default'").run();
 }
 
 module.exports = db;

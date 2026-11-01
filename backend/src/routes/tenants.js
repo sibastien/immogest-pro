@@ -33,6 +33,10 @@ router.get('/', (req, res) => {
     planStatus: tenant.plan_status || 'active',
     trialEndsAt: tenant.trial_ends_at,
     ownerEmail: tenant.owner_email,
+    phone: tenant.phone || '',
+    whatsapp: tenant.whatsapp || tenant.phone || '',
+    address: tenant.address || '',
+    logo: tenant.logo || '',
     createdAt: tenant.created_at,
     usage: {
       properties: propertiesCount,
@@ -46,12 +50,40 @@ router.get('/', (req, res) => {
 
 // PUT /api/tenant — update agency details (admin only)
 router.put('/', requireRole('admin'), (req, res) => {
-  const { name } = req.body;
+  const { name, phone, whatsapp, address, logo } = req.body;
   if (!name?.trim()) return res.status(400).json({ error: "Le nom de l'agence est requis." });
 
-  db.prepare('UPDATE tenants SET name = ? WHERE id = ?').run(name.trim(), req.tenantId);
+  db.prepare(`
+    UPDATE tenants 
+    SET name = @name,
+        phone = COALESCE(@phone, phone),
+        whatsapp = COALESCE(@whatsapp, whatsapp),
+        address = COALESCE(@address, address),
+        logo = COALESCE(@logo, logo)
+    WHERE id = @id
+  `).run({
+    id: req.tenantId,
+    name: name.trim(),
+    phone: phone !== undefined ? String(phone).trim() : null,
+    whatsapp: whatsapp !== undefined ? String(whatsapp).trim() : null,
+    address: address !== undefined ? String(address).trim() : null,
+    logo: logo !== undefined ? String(logo).trim() : null,
+  });
+
   const updated = db.prepare('SELECT * FROM tenants WHERE id = ?').get(req.tenantId);
-  res.json(updated);
+  res.json({
+    id: updated.id,
+    name: updated.name,
+    slug: updated.slug,
+    plan: updated.plan,
+    planStatus: updated.plan_status,
+    trialEndsAt: updated.trial_ends_at,
+    ownerEmail: updated.owner_email,
+    phone: updated.phone || '',
+    whatsapp: updated.whatsapp || '',
+    address: updated.address || '',
+    logo: updated.logo || '',
+  });
 });
 
 // POST /api/tenant/plan — switch plan (admin only)
